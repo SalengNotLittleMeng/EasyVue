@@ -1,5 +1,5 @@
 {
-  "name": "lingyun",
+  "name": "kovue",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,14 +9,16 @@
     "format": "npx prettier --write .",
     "commit": "npx git-cz"
   },
-  "dependencies": {},
+  "dependencies": {
+    "webpack": "^5.73.0"
+  },
   "devDependencies": {
     "@commitlint/config-conventional": "^16.2.1",
     "commitizen": "^4.2.4",
     "commitlint": "^16.2.3",
     "cz-conventional-changelog": "^3.3.0",
-    "prettier": "^2.6.0",
-    "husky": "^7.0.4"
+    "husky": "^7.0.4",
+    "prettier": "^2.6.0"
   },
   "config": {
     "commitizen": {
