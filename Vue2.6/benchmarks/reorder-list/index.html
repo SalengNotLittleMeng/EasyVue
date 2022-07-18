@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>Vue benchmark</title>
   </head>
   <body>
     <script src="https://cdn.jsdelivr.net/lodash/4.10.0/lodash.min.js"></script>
     <script src="../../dist/vue.min.js"></script>
     <style>
-    .danger {
-      background-color: red;
-    }
+      .danger {
+        background-color: red;
+      }
     </style>
 
     <script type="text/x-template" id="t">
@@ -42,70 +42,69 @@
       </tr>
     </script>
 
-    <div id="el">
-    </div>
+    <div id="el"></div>
 
     <script>
-    var total = 1000
-    var items = []
-    for (var i = 0; i < total; i++) {
-      items.push({
-        id: i,
-        label: String(Math.random()).slice(0, 5)
-      })
-    }
-
-    var s = window.performance.now()
-    console.profile('render')
-    var vm = new Vue({
-      el: '#el',
-      template: '#t',
-      data: {
-        total: total,
-        time: 0,
-        action: 'Render',
-        items: items,
-        selected: null
-      },
-      methods: {
-        shuffle: monitor('shuffle', function () {
-          this.items = _.shuffle(this.items)
-        }),
-        add: monitor('add', function () {
-          this.items.push({
-            id: total++,
-            label: String(Math.random()).slice(0, 5)
-          })
-        }),
-        select: monitor('select', function (item) {
-          this.selected = item.id
-        }),
-        remove: monitor('remove', function (item) {
-          this.items.splice(this.items.indexOf(item), 1)
-        })
-      },
-      components: {
-        row: {
-          props: ['item'],
-          template: '#row'
-        }
+      var total = 1000;
+      var items = [];
+      for (var i = 0; i < total; i++) {
+        items.push({
+          id: i,
+          label: String(Math.random()).slice(0, 5),
+        });
       }
-    })
-    setTimeout(function () {
-      vm.time = window.performance.now() - s
-      console.profileEnd('render')
-    }, 0)
 
-    function monitor (action, fn) {
-      return function () {
-        var s = window.performance.now()
-        fn.apply(this, arguments)
-        Vue.nextTick(function () {
-          vm.action = action
-          vm.time = window.performance.now() - s
-        })
+      var s = window.performance.now();
+      console.profile("render");
+      var vm = new Vue({
+        el: "#el",
+        template: "#t",
+        data: {
+          total: total,
+          time: 0,
+          action: "Render",
+          items: items,
+          selected: null,
+        },
+        methods: {
+          shuffle: monitor("shuffle", function () {
+            this.items = _.shuffle(this.items);
+          }),
+          add: monitor("add", function () {
+            this.items.push({
+              id: total++,
+              label: String(Math.random()).slice(0, 5),
+            });
+          }),
+          select: monitor("select", function (item) {
+            this.selected = item.id;
+          }),
+          remove: monitor("remove", function (item) {
+            this.items.splice(this.items.indexOf(item), 1);
+          }),
+        },
+        components: {
+          row: {
+            props: ["item"],
+            template: "#row",
+          },
+        },
+      });
+      setTimeout(function () {
+        vm.time = window.performance.now() - s;
+        console.profileEnd("render");
+      }, 0);
+
+      function monitor(action, fn) {
+        return function () {
+          var s = window.performance.now();
+          fn.apply(this, arguments);
+          Vue.nextTick(function () {
+            vm.action = action;
+            vm.time = window.performance.now() - s;
+          });
+        };
       }
-    }
     </script>
   </body>
 </html>

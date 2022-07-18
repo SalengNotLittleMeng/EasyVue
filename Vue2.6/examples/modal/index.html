@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>Vue.js modal component example</title>
     <!-- Delete ".min" for console warnings in development -->
     <script src="../../dist/vue.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <!-- template for the modal component -->
@@ -56,17 +56,17 @@
 
     <script>
       // register modal component
-      Vue.component('modal', {
-        template: '#modal-template'
-      })
+      Vue.component("modal", {
+        template: "#modal-template",
+      });
 
       // start app
       new Vue({
-        el: '#app',
+        el: "#app",
         data: {
-          showModal: false
-        }
-      })
+          showModal: false,
+        },
+      });
     </script>
   </body>
 </html>

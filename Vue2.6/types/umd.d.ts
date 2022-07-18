@@ -4,7 +4,7 @@ import {
   DefaultProps,
   DefaultMethods,
   DefaultComputed,
-  PropsDefinition
+  PropsDefinition,
 } from "./options";
 
 // Expose some types for backward compatibility...
@@ -14,13 +14,33 @@ declare namespace Vue {
   export type VueConstructor<V extends Vue = Vue> = V.VueConstructor<V>;
 
   // options.d.ts
-  export type Component<Data=DefaultData<never>, Methods=DefaultMethods<never>, Computed=DefaultComputed, Props=DefaultProps> = V.Component<Data, Methods, Computed, Props>;
-  export type AsyncComponent<Data=DefaultData<never>, Methods=DefaultMethods<never>, Computed=DefaultComputed, Props=DefaultProps> = V.AsyncComponent<Data, Methods, Computed, Props>;
-  export type ComponentOptions<V extends Vue, Data=DefaultData<V>, Methods=DefaultMethods<V>, Computed=DefaultComputed, PropsDef=PropsDefinition<DefaultProps>, Props=DefaultProps> = V.ComponentOptions<V, Data, Methods, Computed, PropsDef, Props>;
-  export type FunctionalComponentOptions<Props = DefaultProps, PropDefs = PropsDefinition<Props>> = V.FunctionalComponentOptions<Props, PropDefs>;
-  export type RenderContext<Props=DefaultProps> = V.RenderContext<Props>;
+  export type Component<
+    Data = DefaultData<never>,
+    Methods = DefaultMethods<never>,
+    Computed = DefaultComputed,
+    Props = DefaultProps
+  > = V.Component<Data, Methods, Computed, Props>;
+  export type AsyncComponent<
+    Data = DefaultData<never>,
+    Methods = DefaultMethods<never>,
+    Computed = DefaultComputed,
+    Props = DefaultProps
+  > = V.AsyncComponent<Data, Methods, Computed, Props>;
+  export type ComponentOptions<
+    V extends Vue,
+    Data = DefaultData<V>,
+    Methods = DefaultMethods<V>,
+    Computed = DefaultComputed,
+    PropsDef = PropsDefinition<DefaultProps>,
+    Props = DefaultProps
+  > = V.ComponentOptions<V, Data, Methods, Computed, PropsDef, Props>;
+  export type FunctionalComponentOptions<
+    Props = DefaultProps,
+    PropDefs = PropsDefinition<Props>
+  > = V.FunctionalComponentOptions<Props, PropDefs>;
+  export type RenderContext<Props = DefaultProps> = V.RenderContext<Props>;
   export type PropType<T> = V.PropType<T>;
-  export type PropOptions<T=any> = V.PropOptions<T>;
+  export type PropOptions<T = any> = V.PropOptions<T>;
   export type ComputedOptions<T> = V.ComputedOptions<T>;
   export type WatchHandler<T> = V.WatchHandler<T>;
   export type WatchOptions = V.WatchOptions;

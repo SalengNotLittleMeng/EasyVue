@@ -1,51 +1,49 @@
-const alias = require('../../scripts/alias')
-const featureFlags = require('../../scripts/feature-flags')
-const webpack = require('webpack')
+const alias = require("../../scripts/alias");
+const featureFlags = require("../../scripts/feature-flags");
+const webpack = require("webpack");
 
 const webpackConfig = {
-  mode: 'development',
+  mode: "development",
   resolve: {
-    alias: alias
+    alias: alias,
   },
   module: {
     rules: [
       {
         test: /\.js$/,
-        loader: 'babel-loader',
-        exclude: /node_modules/
-      }
-    ]
+        loader: "babel-loader",
+        exclude: /node_modules/,
+      },
+    ],
   },
   plugins: [
     new webpack.DefinePlugin({
       __WEEX__: false,
-      'process.env': {
+      "process.env": {
         TRANSITION_DURATION: process.env.CI ? 100 : 50,
         TRANSITION_BUFFER: 10,
-        ...featureFlags
-      }
-    })
+        ...featureFlags,
+      },
+    }),
   ],
-  devtool: '#inline-source-map'
-}
+  devtool: "#inline-source-map",
+};
 
 // shared config for all unit tests
 module.exports = {
-  frameworks: ['jasmine'],
-  files: [
-    './index.js'
-  ],
+  frameworks: ["jasmine"],
+  files: ["./index.js"],
   preprocessors: {
-    './index.js': ['webpack', 'sourcemap']
+    "./index.js": ["webpack", "sourcemap"],
   },
   webpack: webpackConfig,
   webpackMiddleware: {
-    noInfo: true
+    noInfo: true,
   },
   plugins: [
-    'karma-jasmine',
-    'karma-mocha-reporter',
-    'karma-sourcemap-loader',
-    'karma-webpack'
-  ]
-}
+    "karma-jasmine",
+    "karma-mocha-reporter",
+    "karma-sourcemap-loader",
+    "karma-webpack",
+  ],
+};

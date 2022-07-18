@@ -5,61 +5,61 @@ import {
   ssrCompile,
   ssrCompileToFunctions,
   parseComponent,
-  generateCodeFrame
+  generateCodeFrame,
 } from "./";
 
 // check compile options
 const compiled = compile("<div>hi</div>", {
   outputSourceRange: true,
   preserveWhitespace: false,
-  whitespace: 'condense',
+  whitespace: "condense",
   modules: [
     {
-      preTransformNode: el => el,
-      transformNode: el => el,
-      postTransformNode: el => {
+      preTransformNode: (el) => el,
+      transformNode: (el) => el,
+      postTransformNode: (el) => {
         el.tag = "p";
       },
-      genData: el => el.tag,
+      genData: (el) => el.tag,
       transformCode: (el, code) => code,
-      staticKeys: ["test"]
-    }
+      staticKeys: ["test"],
+    },
   ],
   directives: {
     test: (node, directiveMeta) => {
       node.tag;
       directiveMeta.value;
-    }
-  }
+    },
+  },
 });
 
 // can be passed to function constructor
 new Function(compiled.render);
-compiled.staticRenderFns.map(fn => new Function(fn));
+compiled.staticRenderFns.map((fn) => new Function(fn));
 
 // with outputSourceRange: true
 // errors should be objects with range
-compiled.errors.forEach(e => {
-  console.log(e.msg)
-})
+compiled.errors.forEach((e) => {
+  console.log(e.msg);
+});
 
 // without option or without outputSourceRange: true, should be strings
-const { errors } = compile(`foo`)
-errors.forEach(e => {
-  console.log(e.length)
-})
+const { errors } = compile(`foo`);
+errors.forEach((e) => {
+  console.log(e.length);
+});
 
-const { errors: errors2 } = compile(`foo`, {})
-errors2.forEach(e => {
-  console.log(e.length)
-})
+const { errors: errors2 } = compile(`foo`, {});
+errors2.forEach((e) => {
+  console.log(e.length);
+});
 
 const { errors: errors3 } = compile(`foo`, {
-  outputSourceRange: false
-})
-errors3.forEach(e => {
-  console.log(e.length)
-})
+  outputSourceRange: false,
+});
+errors3.forEach((e) => {
+  console.log(e.length);
+});
 
 const compiledFns = compileToFunctions("<div>hi</div>");
 
@@ -67,11 +67,11 @@ const compiledFns = compileToFunctions("<div>hi</div>");
 const vm = new Vue({
   data() {
     return {
-      test: "Test"
+      test: "Test",
     };
   },
   render: compiledFns.render,
-  staticRenderFns: compiledFns.staticRenderFns
+  staticRenderFns: compiledFns.staticRenderFns,
 });
 
 // can be called with component instance
@@ -80,11 +80,11 @@ const vnode: VNode = compiledFns.render.call(vm);
 // check SFC parser
 const desc = parseComponent("<template></template>", {
   pad: "space",
-  deindent: false
+  deindent: false,
 });
 
 const templateContent: string = desc.template!.content;
 const scriptContent: string = desc.script!.content;
-const styleContent: string = desc.styles.map(s => s.content).join("\n");
+const styleContent: string = desc.styles.map((s) => s.content).join("\n");
 
-const codeframe: string = generateCodeFrame(`foobar`, 0, 4)
+const codeframe: string = generateCodeFrame(`foobar`, 0, 4);

@@ -1,27 +1,31 @@
 ({
-  type: 'recycle-list',
+  type: "recycle-list",
   attr: {
-    append: 'tree',
+    append: "tree",
     listData: [
-      { type: 'A', color: 'red' },
-      { type: 'A', color: 'blue' }
+      { type: "A", color: "red" },
+      { type: "A", color: "blue" },
     ],
-    switch: 'type',
-    alias: 'item'
+    switch: "type",
+    alias: "item",
   },
-  children: [{
-    type: 'cell-slot',
-    attr: { append: 'tree', case: 'A' },
-    style: {
-      backgroundColor: '#FF6600'
+  children: [
+    {
+      type: "cell-slot",
+      attr: { append: "tree", case: "A" },
+      style: {
+        backgroundColor: "#FF6600",
+      },
+      children: [
+        {
+          type: "text",
+          attr: {
+            // not supported yet
+            // classList: ['text', { '@binding': 'item.color' }],
+            value: "content",
+          },
+        },
+      ],
     },
-    children: [{
-      type: 'text',
-      attr: {
-        // not supported yet
-        // classList: ['text', { '@binding': 'item.color' }],
-        value: 'content'
-      }
-    }]
-  }]
-})
+  ],
+});

@@ -1,28 +1,32 @@
 /* @flow */
 
-import { isUndef } from 'shared/util'
+import { isUndef } from "shared/util";
 
-type RenderState = {
-  type: 'Element';
-  rendered: number;
-  total: number;
-  children: Array<VNode>;
-  endTag: string;
-} | {
-  type: 'Fragment';
-  rendered: number;
-  total: number;
-  children: Array<VNode>;
-} | {
-  type: 'Component';
-  prevActive: Component;
-} | {
-  type: 'ComponentWithCache';
-  buffer: Array<string>;
-  bufferIndex: number;
-  componentBuffer: Array<Set<Class<Component>>>;
-  key: string;
-};
+type RenderState =
+  | {
+      type: "Element",
+      rendered: number,
+      total: number,
+      children: Array<VNode>,
+      endTag: string,
+    }
+  | {
+      type: "Fragment",
+      rendered: number,
+      total: number,
+      children: Array<VNode>,
+    }
+  | {
+      type: "Component",
+      prevActive: Component,
+    }
+  | {
+      type: "ComponentWithCache",
+      buffer: Array<string>,
+      bufferIndex: number,
+      componentBuffer: Array<Set<Class<Component>>>,
+      key: string,
+    };
 
 export class RenderContext {
   userContext: ?Object;
@@ -41,90 +45,90 @@ export class RenderContext {
   get: ?(key: string, cb: Function) => void;
   has: ?(key: string, cb: Function) => void;
 
-  constructor (options: Object) {
-    this.userContext = options.userContext
-    this.activeInstance = options.activeInstance
-    this.renderStates = []
+  constructor(options: Object) {
+    this.userContext = options.userContext;
+    this.activeInstance = options.activeInstance;
+    this.renderStates = [];
 
-    this.write = options.write
-    this.done = options.done
-    this.renderNode = options.renderNode
+    this.write = options.write;
+    this.done = options.done;
+    this.renderNode = options.renderNode;
 
-    this.isUnaryTag = options.isUnaryTag
-    this.modules = options.modules
-    this.directives = options.directives
+    this.isUnaryTag = options.isUnaryTag;
+    this.modules = options.modules;
+    this.directives = options.directives;
 
-    const cache = options.cache
+    const cache = options.cache;
     if (cache && (!cache.get || !cache.set)) {
-      throw new Error('renderer cache must implement at least get & set.')
+      throw new Error("renderer cache must implement at least get & set.");
     }
-    this.cache = cache
-    this.get = cache && normalizeAsync(cache, 'get')
-    this.has = cache && normalizeAsync(cache, 'has')
+    this.cache = cache;
+    this.get = cache && normalizeAsync(cache, "get");
+    this.has = cache && normalizeAsync(cache, "has");
 
-    this.next = this.next.bind(this)
+    this.next = this.next.bind(this);
   }
 
-  next () {
+  next() {
     // eslint-disable-next-line
     while (true) {
-      const lastState = this.renderStates[this.renderStates.length - 1]
+      const lastState = this.renderStates[this.renderStates.length - 1];
       if (isUndef(lastState)) {
-        return this.done()
+        return this.done();
       }
       /* eslint-disable no-case-declarations */
       switch (lastState.type) {
-        case 'Element':
-        case 'Fragment':
-          const { children, total } = lastState
-          const rendered = lastState.rendered++
+        case "Element":
+        case "Fragment":
+          const { children, total } = lastState;
+          const rendered = lastState.rendered++;
           if (rendered < total) {
-            return this.renderNode(children[rendered], false, this)
+            return this.renderNode(children[rendered], false, this);
           } else {
-            this.renderStates.pop()
-            if (lastState.type === 'Element') {
-              return this.write(lastState.endTag, this.next)
+            this.renderStates.pop();
+            if (lastState.type === "Element") {
+              return this.write(lastState.endTag, this.next);
             }
           }
-          break
-        case 'Component':
-          this.renderStates.pop()
-          this.activeInstance = lastState.prevActive
-          break
-        case 'ComponentWithCache':
-          this.renderStates.pop()
-          const { buffer, bufferIndex, componentBuffer, key } = lastState
+          break;
+        case "Component":
+          this.renderStates.pop();
+          this.activeInstance = lastState.prevActive;
+          break;
+        case "ComponentWithCache":
+          this.renderStates.pop();
+          const { buffer, bufferIndex, componentBuffer, key } = lastState;
           const result = {
             html: buffer[bufferIndex],
-            components: componentBuffer[bufferIndex]
-          }
-          this.cache.set(key, result)
+            components: componentBuffer[bufferIndex],
+          };
+          this.cache.set(key, result);
           if (bufferIndex === 0) {
             // this is a top-level cached component,
             // exit caching mode.
-            this.write.caching = false
+            this.write.caching = false;
           } else {
             // parent component is also being cached,
             // merge self into parent's result
-            buffer[bufferIndex - 1] += result.html
-            const prev = componentBuffer[bufferIndex - 1]
-            result.components.forEach(c => prev.add(c))
+            buffer[bufferIndex - 1] += result.html;
+            const prev = componentBuffer[bufferIndex - 1];
+            result.components.forEach((c) => prev.add(c));
           }
-          buffer.length = bufferIndex
-          componentBuffer.length = bufferIndex
-          break
+          buffer.length = bufferIndex;
+          componentBuffer.length = bufferIndex;
+          break;
       }
     }
   }
 }
 
-function normalizeAsync (cache, method) {
-  const fn = cache[method]
+function normalizeAsync(cache, method) {
+  const fn = cache[method];
   if (isUndef(fn)) {
-    return
+    return;
   } else if (fn.length > 1) {
-    return (key, cb) => fn.call(cache, key, cb)
+    return (key, cb) => fn.call(cache, key, cb);
   } else {
-    return (key, cb) => cb(fn.call(cache, key))
+    return (key, cb) => cb(fn.call(cache, key));
   }
 }

@@ -1,9 +1,9 @@
 var app = new Vue({
-  el: '#app',
+  el: "#app",
   data: {
-    databases: []
-  }
-})
+    databases: [],
+  },
+});
 
 function loadSamples() {
   app.databases = Object.freeze(ENV.generateData().toArray());
@@ -11,4 +11,4 @@ function loadSamples() {
   setTimeout(loadSamples, ENV.timeout);
 }
 
-loadSamples()
+loadSamples();

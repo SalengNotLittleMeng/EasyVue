@@ -1,11 +1,11 @@
 ## Explanation of Build Files
 
-| | UMD | CommonJS | ES Module |
-| --- | --- | --- | --- |
-| **Full** | vue.js | vue.common.js | vue.esm.js |
-| **Runtime-only** | vue.runtime.js | vue.runtime.common.js | vue.runtime.esm.js |
-| **Full (production)** | vue.min.js | | |
-| **Runtime-only (production)** | vue.runtime.min.js | | |
+|                               | UMD                | CommonJS              | ES Module          |
+| ----------------------------- | ------------------ | --------------------- | ------------------ |
+| **Full**                      | vue.js             | vue.common.js         | vue.esm.js         |
+| **Runtime-only**              | vue.runtime.js     | vue.runtime.common.js | vue.runtime.esm.js |
+| **Full (production)**         | vue.min.js         |                       |                    |
+| **Runtime-only (production)** | vue.runtime.min.js |                       |                    |
 
 ### Terms
 
@@ -31,37 +31,37 @@ Since the runtime-only builds are roughly 30% lighter-weight than their full-bui
 
 #### Webpack
 
-``` js
+```js
 module.exports = {
   // ...
   resolve: {
     alias: {
-      'vue$': 'vue/dist/vue.esm.js' // 'vue/dist/vue.common.js' for webpack 1
-    }
-  }
-}
+      vue$: "vue/dist/vue.esm.js", // 'vue/dist/vue.common.js' for webpack 1
+    },
+  },
+};
 ```
 
 #### Rollup
 
-``` js
-const alias = require('rollup-plugin-alias')
+```js
+const alias = require("rollup-plugin-alias");
 
 rollup({
   // ...
   plugins: [
     alias({
-      'vue': 'vue/dist/vue.esm.js'
-    })
-  ]
-})
+      vue: "vue/dist/vue.esm.js",
+    }),
+  ],
+});
 ```
 
 #### Browserify
 
 Add to your project's `package.json`:
 
-``` js
+```js
 {
   // ...
   "browser": {
@@ -82,25 +82,25 @@ CommonJS and ES Module builds also preserve raw checks for `process.env.NODE_ENV
 
 Use Webpack's [DefinePlugin](https://webpack.js.org/plugins/define-plugin/):
 
-``` js
-var webpack = require('webpack')
+```js
+var webpack = require("webpack");
 
 module.exports = {
   // ...
   plugins: [
     // ...
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify('production')
-    })
-  ]
-}
+      "process.env.NODE_ENV": JSON.stringify("production"),
+    }),
+  ],
+};
 ```
 
 #### Rollup
 
 Use [rollup-plugin-replace](https://github.com/rollup/rollup-plugin-replace):
 
-``` js
+```js
 const replace = require('rollup-plugin-replace')
 
 rollup({
@@ -117,6 +117,6 @@ rollup({
 
 Apply a global [envify](https://github.com/hughsk/envify) transform to your bundle.
 
-``` bash
+```bash
 NODE_ENV=production browserify -g envify -e main.js | uglifyjs -c -m > build.js
 ```

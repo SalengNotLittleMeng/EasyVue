@@ -1,20 +1,20 @@
 <template>
   <div @click="inc">
-    <text>{{count}}</text>
+    <text>{{ count }}</text>
   </div>
 </template>
 
 <script>
-  module.exports = {
-    data () {
-      return {
-        count: 42
-      }
+module.exports = {
+  data() {
+    return {
+      count: 42,
+    };
+  },
+  methods: {
+    inc() {
+      this.count++;
     },
-    methods: {
-      inc () {
-        this.count++
-      }
-    }
-  }
+  },
+};
 </script>

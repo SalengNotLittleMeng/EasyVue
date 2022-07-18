@@ -1,10 +1,12 @@
 ({
-  type: 'div',
-  event: ['click'],
-  children: [{
-    type: 'text',
-    attr: {
-      value: '43'
-    }
-  }]
-})
+  type: "div",
+  event: ["click"],
+  children: [
+    {
+      type: "text",
+      attr: {
+        value: "43",
+      },
+    },
+  ],
+});

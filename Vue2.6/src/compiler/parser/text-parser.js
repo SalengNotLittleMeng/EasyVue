@@ -1,53 +1,53 @@
 /* @flow */
 
-import { cached } from 'shared/util'
-import { parseFilters } from './filter-parser'
+import { cached } from "shared/util";
+import { parseFilters } from "./filter-parser";
 
-const defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g
-const regexEscapeRE = /[-.*+?^${}()|[\]\/\\]/g
+const defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g;
+const regexEscapeRE = /[-.*+?^${}()|[\]\/\\]/g;
 
-const buildRegex = cached(delimiters => {
-  const open = delimiters[0].replace(regexEscapeRE, '\\$&')
-  const close = delimiters[1].replace(regexEscapeRE, '\\$&')
-  return new RegExp(open + '((?:.|\\n)+?)' + close, 'g')
-})
+const buildRegex = cached((delimiters) => {
+  const open = delimiters[0].replace(regexEscapeRE, "\\$&");
+  const close = delimiters[1].replace(regexEscapeRE, "\\$&");
+  return new RegExp(open + "((?:.|\\n)+?)" + close, "g");
+});
 
 type TextParseResult = {
   expression: string,
-  tokens: Array<string | { '@binding': string }>
-}
+  tokens: Array<string | { "@binding": string }>,
+};
 
-export function parseText (
+export function parseText(
   text: string,
   delimiters?: [string, string]
 ): TextParseResult | void {
-  const tagRE = delimiters ? buildRegex(delimiters) : defaultTagRE
+  const tagRE = delimiters ? buildRegex(delimiters) : defaultTagRE;
   if (!tagRE.test(text)) {
-    return
+    return;
   }
-  const tokens = []
-  const rawTokens = []
-  let lastIndex = tagRE.lastIndex = 0
-  let match, index, tokenValue
+  const tokens = [];
+  const rawTokens = [];
+  let lastIndex = (tagRE.lastIndex = 0);
+  let match, index, tokenValue;
   while ((match = tagRE.exec(text))) {
-    index = match.index
+    index = match.index;
     // push text token
     if (index > lastIndex) {
-      rawTokens.push(tokenValue = text.slice(lastIndex, index))
-      tokens.push(JSON.stringify(tokenValue))
+      rawTokens.push((tokenValue = text.slice(lastIndex, index)));
+      tokens.push(JSON.stringify(tokenValue));
     }
     // tag token
-    const exp = parseFilters(match[1].trim())
-    tokens.push(`_s(${exp})`)
-    rawTokens.push({ '@binding': exp })
-    lastIndex = index + match[0].length
+    const exp = parseFilters(match[1].trim());
+    tokens.push(`_s(${exp})`);
+    rawTokens.push({ "@binding": exp });
+    lastIndex = index + match[0].length;
   }
   if (lastIndex < text.length) {
-    rawTokens.push(tokenValue = text.slice(lastIndex))
-    tokens.push(JSON.stringify(tokenValue))
+    rawTokens.push((tokenValue = text.slice(lastIndex)));
+    tokens.push(JSON.stringify(tokenValue));
   }
   return {
-    expression: tokens.join('+'),
-    tokens: rawTokens
-  }
+    expression: tokens.join("+"),
+    tokens: rawTokens,
+  };
 }

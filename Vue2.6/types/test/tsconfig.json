@@ -2,10 +2,7 @@
   "compilerOptions": {
     "target": "es5",
     "experimentalDecorators": true,
-    "lib": [
-      "dom",
-      "es2015"
-    ],
+    "lib": ["dom", "es2015"],
     "module": "commonjs",
     "strict": true,
     "noEmit": true,
@@ -14,9 +11,6 @@
       "vue": ["../index.d.ts"]
     }
   },
-  "include": [
-    "../*.d.ts",
-    "*.ts"
-  ],
+  "include": ["../*.d.ts", "*.ts"],
   "compileOnSave": false
 }

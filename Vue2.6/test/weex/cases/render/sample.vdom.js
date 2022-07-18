@@ -1,13 +1,15 @@
 ({
-  type: 'div',
+  type: "div",
   style: {
-    justifyContent: 'center'
+    justifyContent: "center",
   },
-  children: [{
-    type: 'text',
-    attr: {
-      value: 'Yo'
+  children: [
+    {
+      type: "text",
+      attr: {
+        value: "Yo",
+      },
+      classList: ["freestyle"],
     },
-    classList: ['freestyle']
-  }]
-})
+  ],
+});

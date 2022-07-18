@@ -1,4 +1,4 @@
-import Vue, { VNode } from "vue"
+import Vue, { VNode } from "vue";
 
 /*
  * Template compilation options / results
@@ -7,12 +7,12 @@ interface CompilerOptions {
   modules?: ModuleOptions[];
   directives?: Record<string, DirectiveFunction>;
   preserveWhitespace?: boolean;
-  whitespace?: 'preserve' | 'condense';
-  outputSourceRange?: any
+  whitespace?: "preserve" | "condense";
+  outputSourceRange?: any;
 }
 
 interface CompilerOptionsWithSourceRange extends CompilerOptions {
-  outputSourceRange: true
+  outputSourceRange: true;
 }
 
 interface ErrorWithRange {
@@ -43,7 +43,10 @@ interface ModuleOptions {
   staticKeys?: string[];
 }
 
-type DirectiveFunction = (node: ASTElement, directiveMeta: ASTDirective) => void;
+type DirectiveFunction = (
+  node: ASTElement,
+  directiveMeta: ASTDirective
+) => void;
 
 /*
  * AST Types
@@ -56,7 +59,7 @@ type DirectiveFunction = (node: ASTElement, directiveMeta: ASTDirective) => void
  * - 3: CHILDREN - self un-optimizable but have fully optimizable children
  * - 4: PARTIAL - self un-optimizable with some un-optimizable children
  */
-export type SSROptimizability = 0 | 1 | 2 | 3 | 4
+export type SSROptimizability = 0 | 1 | 2 | 3 | 4;
 
 export interface ASTModifiers {
   [key: string]: boolean;
@@ -188,8 +191,8 @@ export interface ASTText {
  * SFC parser related types
  */
 interface SFCParserOptions {
-  pad?: true | 'line' | 'space';
-  deindent?: boolean
+  pad?: true | "line" | "space";
+  deindent?: boolean;
 }
 
 export interface SFCBlock {
@@ -217,7 +220,7 @@ export interface SFCDescriptor {
 export function compile(
   template: string,
   options: CompilerOptionsWithSourceRange
-): CompiledResult<ErrorWithRange>
+): CompiledResult<ErrorWithRange>;
 
 export function compile(
   template: string,
@@ -236,7 +239,9 @@ export function ssrCompile(
   options?: CompilerOptions
 ): CompiledResult<string>;
 
-export function ssrCompileToFunctions(template: string): CompiledResultFunctions;
+export function ssrCompileToFunctions(
+  template: string
+): CompiledResultFunctions;
 
 export function parseComponent(
   file: string,

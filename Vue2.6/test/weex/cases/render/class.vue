@@ -9,48 +9,48 @@
 </template>
 
 <style scoped>
-  .box {
-    width: 100px;
-    height: 100px;
-  }
+.box {
+  width: 100px;
+  height: 100px;
+}
 
-  .box1 {
-    background-color: #DDD;
-  }
+.box1 {
+  background-color: #ddd;
+}
 
-  .box2 {
-    background-color: #CCC;
-  }
+.box2 {
+  background-color: #ccc;
+}
 
-  .box3 {
-    background-color: #BBB;
-  }
+.box3 {
+  background-color: #bbb;
+}
 
-  .box4 {
-    background-color: #AAA;
-  }
+.box4 {
+  background-color: #aaa;
+}
 
-  .box5 {
-    background-color: #999;
-  }
+.box5 {
+  background-color: #999;
+}
 </style>
 
 <script>
-  module.exports = {
-    data () {
-      return {
-        class1: ['box', 'box1'],
-        class2: {
-          'box': true,
-          'box1': false,
-          'box2': true
-        },
-        class3: ['box3'],
-        class4: {
-          'box4': true
-        },
-        class5: true
-      }
-    }
-  }
+module.exports = {
+  data() {
+    return {
+      class1: ["box", "box1"],
+      class2: {
+        box: true,
+        box1: false,
+        box2: true,
+      },
+      class3: ["box3"],
+      class4: {
+        box4: true,
+      },
+      class5: true,
+    };
+  },
+};
 </script>

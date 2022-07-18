@@ -1,7 +1,13 @@
 import { Vue } from "./vue";
 
 export type ScopedSlot = (props: any) => ScopedSlotReturnValue;
-type ScopedSlotReturnValue = VNode | string | boolean | null | undefined | ScopedSlotReturnArray;
+type ScopedSlotReturnValue =
+  | VNode
+  | string
+  | boolean
+  | null
+  | undefined
+  | ScopedSlotReturnArray;
 interface ScopedSlotReturnArray extends Array<ScopedSlotReturnValue> {}
 
 // Scoped slots are guaranteed to return Array of VNodes starting in 2.6
@@ -9,8 +15,15 @@ export type NormalizedScopedSlot = (props: any) => ScopedSlotChildren;
 export type ScopedSlotChildren = VNode[] | undefined;
 
 // Relaxed type compatible with $createElement
-export type VNodeChildren = VNodeChildrenArrayContents | [ScopedSlot] | string | boolean | null | undefined;
-export interface VNodeChildrenArrayContents extends Array<VNodeChildren | VNode> {}
+export type VNodeChildren =
+  | VNodeChildrenArrayContents
+  | [ScopedSlot]
+  | string
+  | boolean
+  | null
+  | undefined;
+export interface VNodeChildrenArrayContents
+  extends Array<VNodeChildren | VNode> {}
 
 export interface VNode {
   tag?: string;

@@ -41,11 +41,11 @@ jobs:
           at: ~/project
       - run: npm run test:cover
       - run:
-         name: report coverage stats for non-PRs
-         command: |
-           if [[ -z $CI_PULL_REQUEST ]]; then
-             ./node_modules/.bin/codecov
-           fi
+          name: report coverage stats for non-PRs
+          command: |
+            if [[ -z $CI_PULL_REQUEST ]]; then
+              ./node_modules/.bin/codecov
+            fi
 
   test-e2e:
     <<: *defaults
@@ -107,8 +107,7 @@ workflows:
           cron: "0 13 * * 1"
           filters:
             branches:
-              only:
-                dev
+              only: dev
     jobs:
       - install
       - test-cover:

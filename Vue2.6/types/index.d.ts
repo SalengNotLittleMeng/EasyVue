@@ -3,10 +3,7 @@ import "./umd";
 
 export default Vue;
 
-export {
-  CreateElement,
-  VueConstructor
-} from "./vue";
+export { CreateElement, VueConstructor } from "./vue";
 
 export {
   Component,
@@ -21,13 +18,10 @@ export {
   WatchOptions,
   WatchOptionsWithHandler,
   DirectiveFunction,
-  DirectiveOptions
+  DirectiveOptions,
 } from "./options";
 
-export {
-  PluginFunction,
-  PluginObject
-} from "./plugin";
+export { PluginFunction, PluginObject } from "./plugin";
 
 export {
   VNodeChildren,
@@ -35,5 +29,5 @@ export {
   VNode,
   VNodeComponentOptions,
   VNodeData,
-  VNodeDirective
+  VNodeDirective,
 } from "./vnode";

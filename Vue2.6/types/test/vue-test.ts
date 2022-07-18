@@ -21,11 +21,11 @@ class Test extends Vue {
   // test property reification
   $el!: HTMLElement | SVGElement;
   $refs!: {
-    vue: Vue,
-    element: HTMLInputElement,
-    vues: Vue[],
-    elements: HTMLInputElement[]
-  }
+    vue: Vue;
+    element: HTMLInputElement;
+    vues: Vue[];
+    elements: HTMLInputElement[];
+  };
   testReification() {
     this.$refs.vue.$data;
     this.$refs.element.value;
@@ -41,14 +41,17 @@ class Test extends Vue {
     this.$delete({}, "key");
     this.$watch("a", (val: number, oldVal: number) => {}, {
       immediate: true,
-      deep: false
+      deep: false,
     })();
-    this.$watch(() => this.a, (val: number) => {});
+    this.$watch(
+      () => this.a,
+      (val: number) => {}
+    );
     this.$on("", () => {});
     this.$once("", () => {});
     this.$off("", () => {});
     this.$emit("", 1, 2, 3);
-    this.$nextTick(function() {
+    this.$nextTick(function () {
       this.$nextTick;
     });
     this.$nextTick().then(() => {});
@@ -73,22 +76,25 @@ class Test extends Vue {
       }
     };
     config.keyCodes = { esc: 27 };
-    config.ignoredElements = ['foo', /^ion-/];
-    config.async = false
+    config.ignoredElements = ["foo", /^ion-/];
+    config.async = false;
   }
 
   static testMethods() {
     this.extend({
       data() {
         return {
-          msg: ""
+          msg: "",
         };
-      }
+      },
     });
     this.nextTick(() => {});
-    this.nextTick(function () {
-      console.log(this.text === 'test');
-    }, { text: 'test'});
+    this.nextTick(
+      function () {
+        console.log(this.text === "test");
+      },
+      { text: "test" }
+    );
     this.nextTick().then(() => {});
     this.set({}, "", "");
     this.set({}, 1, "");
@@ -96,20 +102,20 @@ class Test extends Vue {
     this.delete({}, "");
     this.delete({}, 1);
     this.delete([true, false], 0);
-    this.directive("", {bind() {}});
+    this.directive("", { bind() {} });
     this.filter("", (value: number) => value);
     this.component("", { data: () => ({}) });
-    this.component("", { functional: true, render(h) { return h("div", "hello!") } });
+    this.component("", {
+      functional: true,
+      render(h) {
+        return h("div", "hello!");
+      },
+    });
     this.use;
     this.mixin(Test);
     this.compile("<div>{{ message }}</div>");
-    this
-      .use(() => {
-
-      })
-      .use(() => {
-
-      })
+    this.use(() => {})
+      .use(() => {})
       .mixin({})
       .mixin({});
   }
@@ -120,89 +126,92 @@ const HelloWorldComponent = Vue.extend({
   data() {
     return {
       message: "Hello " + this.name,
-    }
+    };
   },
   computed: {
     shouted(): string {
       return this.message.toUpperCase();
-    }
+    },
   },
   methods: {
     getMoreExcited() {
       this.message += "!";
-    }
+    },
   },
   watch: {
     message(a: string) {
       console.log(`Message ${this.message} was changed!`);
-    }
-  }
+    },
+  },
 });
 
 const FunctionalHelloWorldComponent = Vue.extend({
   functional: true,
   props: ["name"],
   render(createElement, ctxt) {
-    return createElement("div", "Hello " + ctxt.props.name)
-  }
+    return createElement("div", "Hello " + ctxt.props.name);
+  },
 });
 
 const FunctionalScopedSlotsComponent = Vue.extend({
   functional: true,
   render(h, ctx) {
-    return ctx.scopedSlots.default && ctx.scopedSlots.default({}) || h('div', 'functional scoped slots');
-  }
+    return (
+      (ctx.scopedSlots.default && ctx.scopedSlots.default({})) ||
+      h("div", "functional scoped slots")
+    );
+  },
 });
 
 const Parent = Vue.extend({
   data() {
-    return { greeting: 'Hello' }
-  }
+    return { greeting: "Hello" };
+  },
 });
 
 const Child = Parent.extend({
   methods: {
     foo() {
       console.log(this.greeting.toLowerCase());
-    }
-  }
+    },
+  },
 });
 
 const GrandChild = Child.extend({
   computed: {
     lower(): string {
       return this.greeting.toLowerCase();
-    }
-  }
+    },
+  },
 });
 
 new GrandChild().lower.toUpperCase();
-for (let _ in (new Test()).$options) {
+for (let _ in new Test().$options) {
 }
 declare const options: ComponentOptions<Vue>;
 Vue.extend(options);
-Vue.component('test-comp', options);
+Vue.component("test-comp", options);
 new Vue(options);
 
 // cyclic example
 Vue.extend({
   props: {
     bar: {
-      type: String
-    }
+      type: String,
+    },
   },
   methods: {
-    foo() {}
+    foo() {},
   },
-  mounted () {
-    this.foo()
+  mounted() {
+    this.foo();
   },
   // manual annotation
-  render (h): VNode {
-    const a = this.bar
-    return h('canvas', {}, [a])
-  }
-})
+  render(h): VNode {
+    const a = this.bar;
+    return h("canvas", {}, [a]);
+  },
+});
 
 declare function decorate<VC extends typeof Vue>(v: VC): VC;
 
@@ -211,30 +220,28 @@ class Decorated extends Vue {
   a = 123;
 }
 
-const obj = Vue.observable({ a: 1 })
-obj.a++
+const obj = Vue.observable({ a: 1 });
+obj.a++;
 
 // VNodeData style tests.
 const ComponentWithStyleInVNodeData = Vue.extend({
-  render (h) {
-    const elementWithStyleAsString = h('div', {
-      style: 'background-color: red;'
+  render(h) {
+    const elementWithStyleAsString = h("div", {
+      style: "background-color: red;",
     });
 
-    const elementWithStyleAsObject = h('div', {
-      style: { backgroundColor: 'green' }
+    const elementWithStyleAsObject = h("div", {
+      style: { backgroundColor: "green" },
     });
 
-    const elementWithStyleAsArrayOfObjects = h('div', {
-      style: [
-        { backgroundColor: 'blue' }
-      ]
+    const elementWithStyleAsArrayOfObjects = h("div", {
+      style: [{ backgroundColor: "blue" }],
     });
 
-    return h('div', undefined, [
+    return h("div", undefined, [
       elementWithStyleAsString,
       elementWithStyleAsObject,
-      elementWithStyleAsArrayOfObjects
+      elementWithStyleAsArrayOfObjects,
     ]);
-  }
+  },
 });

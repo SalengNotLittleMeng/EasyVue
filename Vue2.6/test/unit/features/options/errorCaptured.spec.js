@@ -1,398 +1,430 @@
-import Vue from 'vue'
+import Vue from "vue";
 
-describe('Options errorCaptured', () => {
-  let globalSpy
+describe("Options errorCaptured", () => {
+  let globalSpy;
 
   beforeEach(() => {
-    globalSpy = Vue.config.errorHandler = jasmine.createSpy()
-  })
+    globalSpy = Vue.config.errorHandler = jasmine.createSpy();
+  });
 
   afterEach(() => {
-    Vue.config.errorHandler = null
-  })
+    Vue.config.errorHandler = null;
+  });
 
-  it('should capture error from child component', () => {
-    const spy = jasmine.createSpy()
+  it("should capture error from child component", () => {
+    const spy = jasmine.createSpy();
 
-    let child
-    let err
+    let child;
+    let err;
     const Child = {
-      created () {
-        child = this
-        err = new Error('child')
-        throw err
+      created() {
+        child = this;
+        err = new Error("child");
+        throw err;
       },
-      render () {}
-    }
+      render() {},
+    };
 
     new Vue({
       errorCaptured: spy,
-      render: h => h(Child)
-    }).$mount()
+      render: (h) => h(Child),
+    }).$mount();
 
-    expect(spy).toHaveBeenCalledWith(err, child, 'created hook')
+    expect(spy).toHaveBeenCalledWith(err, child, "created hook");
     // should propagate by default
-    expect(globalSpy).toHaveBeenCalledWith(err, child, 'created hook')
-  })
+    expect(globalSpy).toHaveBeenCalledWith(err, child, "created hook");
+  });
 
-  it('should be able to render the error in itself', done => {
-    let child
+  it("should be able to render the error in itself", (done) => {
+    let child;
     const Child = {
-      created () {
-        child = this
-        throw new Error('error from child')
+      created() {
+        child = this;
+        throw new Error("error from child");
       },
-      render () {}
-    }
+      render() {},
+    };
 
     const vm = new Vue({
       data: {
-        error: null
+        error: null,
       },
-      errorCaptured (e, vm, info) {
-        expect(vm).toBe(child)
-        this.error = e.toString() + ' in ' + info
+      errorCaptured(e, vm, info) {
+        expect(vm).toBe(child);
+        this.error = e.toString() + " in " + info;
       },
-      render (h) {
+      render(h) {
         if (this.error) {
-          return h('pre', this.error)
+          return h("pre", this.error);
         }
-        return h(Child)
-      }
-    }).$mount()
+        return h(Child);
+      },
+    }).$mount();
 
     waitForUpdate(() => {
-      expect(vm.$el.textContent).toContain('error from child')
-      expect(vm.$el.textContent).toContain('in created hook')
-    }).then(done)
-  })
+      expect(vm.$el.textContent).toContain("error from child");
+      expect(vm.$el.textContent).toContain("in created hook");
+    }).then(done);
+  });
 
-  it('should not propagate to global handler when returning true', () => {
-    const spy = jasmine.createSpy()
+  it("should not propagate to global handler when returning true", () => {
+    const spy = jasmine.createSpy();
 
-    let child
-    let err
+    let child;
+    let err;
     const Child = {
-      created () {
-        child = this
-        err = new Error('child')
-        throw err
+      created() {
+        child = this;
+        err = new Error("child");
+        throw err;
       },
-      render () {}
-    }
+      render() {},
+    };
 
     new Vue({
-      errorCaptured (err, vm, info) {
-        spy(err, vm, info)
-        return false
+      errorCaptured(err, vm, info) {
+        spy(err, vm, info);
+        return false;
       },
-      render: h => h(Child, {})
-    }).$mount()
+      render: (h) => h(Child, {}),
+    }).$mount();
 
-    expect(spy).toHaveBeenCalledWith(err, child, 'created hook')
+    expect(spy).toHaveBeenCalledWith(err, child, "created hook");
     // should not propagate
-    expect(globalSpy).not.toHaveBeenCalled()
-  })
+    expect(globalSpy).not.toHaveBeenCalled();
+  });
 
-  it('should propagate to global handler if itself throws error', () => {
-    let child
-    let err
+  it("should propagate to global handler if itself throws error", () => {
+    let child;
+    let err;
     const Child = {
-      created () {
-        child = this
-        err = new Error('child')
-        throw err
+      created() {
+        child = this;
+        err = new Error("child");
+        throw err;
       },
-      render () {}
-    }
+      render() {},
+    };
 
-    let err2
+    let err2;
     const vm = new Vue({
-      errorCaptured () {
-        err2 = new Error('foo')
-        throw err2
+      errorCaptured() {
+        err2 = new Error("foo");
+        throw err2;
       },
-      render: h => h(Child, {})
-    }).$mount()
+      render: (h) => h(Child, {}),
+    }).$mount();
 
-    expect(globalSpy).toHaveBeenCalledWith(err, child, 'created hook')
-    expect(globalSpy).toHaveBeenCalledWith(err2, vm, 'errorCaptured hook')
-  })
+    expect(globalSpy).toHaveBeenCalledWith(err, child, "created hook");
+    expect(globalSpy).toHaveBeenCalledWith(err2, vm, "errorCaptured hook");
+  });
 
-  it('should work across multiple parents, mixins and extends', () => {
-    const calls = []
+  it("should work across multiple parents, mixins and extends", () => {
+    const calls = [];
 
     const Child = {
-      created () {
-        throw new Error('child')
+      created() {
+        throw new Error("child");
       },
-      render () {}
-    }
+      render() {},
+    };
 
     const ErrorBoundaryBase = {
-      errorCaptured () {
-        calls.push(1)
-      }
-    }
+      errorCaptured() {
+        calls.push(1);
+      },
+    };
 
     const mixin = {
-      errorCaptured () {
-        calls.push(2)
-      }
-    }
+      errorCaptured() {
+        calls.push(2);
+      },
+    };
 
     const ErrorBoundaryExtended = {
       extends: ErrorBoundaryBase,
       mixins: [mixin],
-      errorCaptured () {
-        calls.push(3)
+      errorCaptured() {
+        calls.push(3);
       },
-      render: h => h(Child)
-    }
+      render: (h) => h(Child),
+    };
 
     Vue.config.errorHandler = () => {
-      calls.push(5)
-    }
+      calls.push(5);
+    };
 
     new Vue({
-      errorCaptured () {
-        calls.push(4)
+      errorCaptured() {
+        calls.push(4);
       },
-      render: h => h(ErrorBoundaryExtended)
-    }).$mount()
+      render: (h) => h(ErrorBoundaryExtended),
+    }).$mount();
 
-    expect(calls).toEqual([1, 2, 3, 4, 5])
-  })
+    expect(calls).toEqual([1, 2, 3, 4, 5]);
+  });
 
-  it('should work across multiple parents, mixins and extends with return false', () => {
-    const calls = []
+  it("should work across multiple parents, mixins and extends with return false", () => {
+    const calls = [];
 
     const Child = {
-      created () {
-        throw new Error('child')
+      created() {
+        throw new Error("child");
       },
-      render () {}
-    }
+      render() {},
+    };
 
     const ErrorBoundaryBase = {
-      errorCaptured () {
-        calls.push(1)
-      }
-    }
+      errorCaptured() {
+        calls.push(1);
+      },
+    };
 
     const mixin = {
-      errorCaptured () {
-        calls.push(2)
-      }
-    }
+      errorCaptured() {
+        calls.push(2);
+      },
+    };
 
     const ErrorBoundaryExtended = {
       extends: ErrorBoundaryBase,
       mixins: [mixin],
-      errorCaptured () {
-        calls.push(3)
-        return false
+      errorCaptured() {
+        calls.push(3);
+        return false;
       },
-      render: h => h(Child)
-    }
+      render: (h) => h(Child),
+    };
 
     Vue.config.errorHandler = () => {
-      calls.push(5)
-    }
+      calls.push(5);
+    };
 
     new Vue({
-      errorCaptured () {
-        calls.push(4)
+      errorCaptured() {
+        calls.push(4);
       },
-      render: h => h(ErrorBoundaryExtended)
-    }).$mount()
+      render: (h) => h(ErrorBoundaryExtended),
+    }).$mount();
 
-    expect(calls).toEqual([1, 2, 3])
-  })
+    expect(calls).toEqual([1, 2, 3]);
+  });
 
   // ref: https://github.com/vuejs/vuex/issues/1505
-  it('should not add watchers to render deps if they are referred from errorCaptured callback', done => {
+  it("should not add watchers to render deps if they are referred from errorCaptured callback", (done) => {
     const store = new Vue({
       data: {
-        errors: []
-      }
-    })
+        errors: [],
+      },
+    });
 
     const Child = {
       computed: {
         test() {
-          throw new Error('render error')
-        }
+          throw new Error("render error");
+        },
       },
 
       render(h) {
-        return h('div', {
+        return h("div", {
           attrs: {
-            'data-test': this.test
-          }
-        })
-      }
-    }
+            "data-test": this.test,
+          },
+        });
+      },
+    };
 
     new Vue({
       errorCaptured(error) {
-        store.errors.push(error)
+        store.errors.push(error);
       },
-      render: h => h(Child)
-    }).$mount()
+      render: (h) => h(Child),
+    }).$mount();
 
     // Ensure not to trigger infinite loop
     waitForUpdate(() => {
-      expect(store.errors.length).toBe(1)
-      expect(store.errors[0]).toEqual(new Error('render error'))
-    }).then(done)
-  })
+      expect(store.errors.length).toBe(1);
+      expect(store.errors[0]).toEqual(new Error("render error"));
+    }).then(done);
+  });
 
-  it('should capture error from watcher', done => {
-    const spy = jasmine.createSpy()
+  it("should capture error from watcher", (done) => {
+    const spy = jasmine.createSpy();
 
-    let child
-    let err
+    let child;
+    let err;
     const Child = {
-      data () {
+      data() {
         return {
-          foo: null
-        }
+          foo: null,
+        };
       },
       watch: {
-        foo () {
-          err = new Error('userWatcherCallback error')
-          throw err
-        }
+        foo() {
+          err = new Error("userWatcherCallback error");
+          throw err;
+        },
       },
-      created () {
-        child = this
+      created() {
+        child = this;
       },
-      render () {}
-    }
+      render() {},
+    };
 
     new Vue({
       errorCaptured: spy,
-      render: h => h(Child)
-    }).$mount()
+      render: (h) => h(Child),
+    }).$mount();
 
-    child.foo = 'bar'
+    child.foo = "bar";
 
     waitForUpdate(() => {
-      expect(spy).toHaveBeenCalledWith(err, child, 'callback for watcher "foo"')
-      expect(globalSpy).toHaveBeenCalledWith(err, child, 'callback for watcher "foo"')
-    }).then(done)
-  })
+      expect(spy).toHaveBeenCalledWith(
+        err,
+        child,
+        'callback for watcher "foo"'
+      );
+      expect(globalSpy).toHaveBeenCalledWith(
+        err,
+        child,
+        'callback for watcher "foo"'
+      );
+    }).then(done);
+  });
 
-  it('should capture promise error from watcher', done => {
-    const spy = jasmine.createSpy()
+  it("should capture promise error from watcher", (done) => {
+    const spy = jasmine.createSpy();
 
-    let child
-    let err
+    let child;
+    let err;
     const Child = {
-      data () {
+      data() {
         return {
-          foo: null
-        }
+          foo: null,
+        };
       },
       watch: {
-        foo () {
-          err = new Error('userWatcherCallback error')
-          return Promise.reject(err)
-        }
+        foo() {
+          err = new Error("userWatcherCallback error");
+          return Promise.reject(err);
+        },
       },
-      created () {
-        child = this
+      created() {
+        child = this;
       },
-      render () {}
-    }
+      render() {},
+    };
 
     new Vue({
       errorCaptured: spy,
-      render: h => h(Child)
-    }).$mount()
+      render: (h) => h(Child),
+    }).$mount();
 
-    child.foo = 'bar'
+    child.foo = "bar";
 
     child.$nextTick(() => {
       waitForUpdate(() => {
-        expect(spy).toHaveBeenCalledWith(err, child, 'callback for watcher "foo" (Promise/async)')
-        expect(globalSpy).toHaveBeenCalledWith(err, child, 'callback for watcher "foo" (Promise/async)')
-      }).then(done)
-    })
-  })
+        expect(spy).toHaveBeenCalledWith(
+          err,
+          child,
+          'callback for watcher "foo" (Promise/async)'
+        );
+        expect(globalSpy).toHaveBeenCalledWith(
+          err,
+          child,
+          'callback for watcher "foo" (Promise/async)'
+        );
+      }).then(done);
+    });
+  });
 
-  it('should capture error from immediate watcher', done => {
-    const spy = jasmine.createSpy()
+  it("should capture error from immediate watcher", (done) => {
+    const spy = jasmine.createSpy();
 
-    let child
-    let err
+    let child;
+    let err;
     const Child = {
-      data () {
+      data() {
         return {
-          foo: 'foo'
-        }
+          foo: "foo",
+        };
       },
       watch: {
         foo: {
           immediate: true,
-          handler () {
-            err = new Error('userImmediateWatcherCallback error')
-            throw err
-          }
-        }
+          handler() {
+            err = new Error("userImmediateWatcherCallback error");
+            throw err;
+          },
+        },
       },
-      created () {
-        child = this
+      created() {
+        child = this;
       },
-      render () {}
-    }
+      render() {},
+    };
 
     new Vue({
       errorCaptured: spy,
-      render: h => h(Child)
-    }).$mount()
+      render: (h) => h(Child),
+    }).$mount();
 
     waitForUpdate(() => {
-      expect(spy).toHaveBeenCalledWith(err, child, 'callback for immediate watcher "foo"')
-      expect(globalSpy).toHaveBeenCalledWith(err, child, 'callback for immediate watcher "foo"')
-    }).then(done)
-  })
+      expect(spy).toHaveBeenCalledWith(
+        err,
+        child,
+        'callback for immediate watcher "foo"'
+      );
+      expect(globalSpy).toHaveBeenCalledWith(
+        err,
+        child,
+        'callback for immediate watcher "foo"'
+      );
+    }).then(done);
+  });
 
-  it('should capture promise error from immediate watcher', done => {
-    const spy = jasmine.createSpy()
+  it("should capture promise error from immediate watcher", (done) => {
+    const spy = jasmine.createSpy();
 
-    let child
-    let err
+    let child;
+    let err;
     const Child = {
-      data () {
+      data() {
         return {
-          foo: 'foo'
-        }
+          foo: "foo",
+        };
       },
       watch: {
         foo: {
           immediate: true,
-          handler () {
-            err = new Error('userImmediateWatcherCallback error')
-            return Promise.reject(err)
-          }
-        }
+          handler() {
+            err = new Error("userImmediateWatcherCallback error");
+            return Promise.reject(err);
+          },
+        },
       },
-      created () {
-        child = this
+      created() {
+        child = this;
       },
-      render () {}
-    }
+      render() {},
+    };
 
     new Vue({
       errorCaptured: spy,
-      render: h => h(Child)
-    }).$mount()
+      render: (h) => h(Child),
+    }).$mount();
 
     waitForUpdate(() => {
-      expect(spy).toHaveBeenCalledWith(err, child, 'callback for immediate watcher "foo" (Promise/async)')
-      expect(globalSpy).toHaveBeenCalledWith(err, child, 'callback for immediate watcher "foo" (Promise/async)')
-    }).then(done)
-  })
-})
+      expect(spy).toHaveBeenCalledWith(
+        err,
+        child,
+        'callback for immediate watcher "foo" (Promise/async)'
+      );
+      expect(globalSpy).toHaveBeenCalledWith(
+        err,
+        child,
+        'callback for immediate watcher "foo" (Promise/async)'
+      );
+    }).then(done);
+  });
+});

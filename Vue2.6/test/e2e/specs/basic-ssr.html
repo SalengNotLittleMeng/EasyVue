@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title></title>
   </head>
   <body>
@@ -11,14 +11,15 @@
     <div id="result">wtf</div>
 
     <script>
-    var vm = new Vue({
-      data: { msg: 'foo' },
-      template: '<div>{{ msg }}</div>'
-    })
+      var vm = new Vue({
+        data: { msg: "foo" },
+        template: "<div>{{ msg }}</div>",
+      });
 
-    renderVueComponentToString(vm, function (err, result) {
-      document.getElementById('result').textContent = err && err.toString() || result
-    })
+      renderVueComponentToString(vm, function (err, result) {
+        document.getElementById("result").textContent =
+          (err && err.toString()) || result;
+      });
     </script>
   </body>
 </html>

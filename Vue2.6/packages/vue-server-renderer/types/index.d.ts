@@ -1,9 +1,12 @@
-import Vue, { VNode, VNodeDirective } from 'vue';
-import { Readable } from 'stream';
+import Vue, { VNode, VNodeDirective } from "vue";
+import { Readable } from "stream";
 
 export declare function createRenderer(options?: RendererOptions): Renderer;
 
-export declare function createBundleRenderer(bundle: string | object, options?: BundleRendererOptions): BundleRenderer;
+export declare function createBundleRenderer(
+  bundle: string | object,
+  options?: BundleRendererOptions
+): BundleRenderer;
 
 type RenderCallback = (err: Error | null, html: string) => void;
 
@@ -32,14 +35,14 @@ interface RendererOptions {
   shouldPrefetch?: (file: string, type: string) => boolean;
   cache?: RenderCache;
   directives?: {
-    [key: string]: (vnode: VNode, dir: VNodeDirective) => void
+    [key: string]: (vnode: VNode, dir: VNodeDirective) => void;
   };
 }
 
 interface BundleRendererOptions extends RendererOptions {
   clientManifest?: object;
   serializer?: (state: object) => string;
-  runInNewContext?: boolean | 'once';
+  runInNewContext?: boolean | "once";
   basedir?: string;
 }
 
