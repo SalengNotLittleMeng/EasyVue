@@ -7,9 +7,19 @@
     <title>Document</title>
   </head>
   <body>
-    <div>
+    <div id="app">
       <h1>hello</h1>
     </div>
   </body>
   <script src="./vue.js"></script>
+  <script>
+    console.log(Vue);
+    const vm = new Vue({
+      el: "#app",
+      data: {
+        name: "zf",
+        age: 20,
+      },
+    });
+  </script>
 </html>
