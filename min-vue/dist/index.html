@@ -8,7 +8,8 @@
   </head>
   <body>
     <div id="app">
-      <h1>hello</h1>
+      <h1>{{name}}hello</h1>
+      <div>{{age}}</div>
     </div>
   </body>
   <script src="./vue.js"></script>
@@ -25,6 +26,9 @@
       },
     });
     console.log(vm);
-    vm.list.push(12);
+    vm.list.push({
+      age: 12,
+    });
+    vm.list[1].age = "123";
   </script>
 </html>
