@@ -208,7 +208,10 @@
     }
   }
 
-  function complieToFunction() {}
+  function complieToFunction(template) {
+    console.log(template);
+  }
+  o9;
 
   // 给Vue增加初始化方法
   function initMixin(Vue) {
@@ -245,7 +248,7 @@
         // 获取优先级：render=>temple=>el
 
         if (template) {
-          var render = complieToFunction();
+          var render = complieToFunction(template);
           opts.render = render;
         }
       }
