@@ -55,6 +55,77 @@
     return Constructor;
   }
 
+  function _slicedToArray(arr, i) {
+    return (
+      _arrayWithHoles(arr) ||
+      _iterableToArrayLimit(arr, i) ||
+      _unsupportedIterableToArray(arr, i) ||
+      _nonIterableRest()
+    );
+  }
+
+  function _arrayWithHoles(arr) {
+    if (Array.isArray(arr)) return arr;
+  }
+
+  function _iterableToArrayLimit(arr, i) {
+    var _i =
+      arr == null
+        ? null
+        : (typeof Symbol !== "undefined" && arr[Symbol.iterator]) ||
+          arr["@@iterator"];
+
+    if (_i == null) return;
+    var _arr = [];
+    var _n = true;
+    var _d = false;
+
+    var _s, _e;
+
+    try {
+      for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) {
+        _arr.push(_s.value);
+
+        if (i && _arr.length === i) break;
+      }
+    } catch (err) {
+      _d = true;
+      _e = err;
+    } finally {
+      try {
+        if (!_n && _i["return"] != null) _i["return"]();
+      } finally {
+        if (_d) throw _e;
+      }
+    }
+
+    return _arr;
+  }
+
+  function _unsupportedIterableToArray(o, minLen) {
+    if (!o) return;
+    if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+    var n = Object.prototype.toString.call(o).slice(8, -1);
+    if (n === "Object" && o.constructor) n = o.constructor.name;
+    if (n === "Map" || n === "Set") return Array.from(o);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n))
+      return _arrayLikeToArray(o, minLen);
+  }
+
+  function _arrayLikeToArray(arr, len) {
+    if (len == null || len > arr.length) len = arr.length;
+
+    for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+
+    return arr2;
+  }
+
+  function _nonIterableRest() {
+    throw new TypeError(
+      "Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."
+    );
+  }
+
   // 我们希望保留原数组特性并重写部分数组方法
   var oldArrayProto = Array.prototype;
   var newArrayProto = Object.create(oldArrayProto); // 所有变异方法
@@ -160,11 +231,9 @@
     observe(value);
     Object.defineProperty(target, key, {
       get: function get() {
-        console.log("用户取值了", value);
         return value;
       },
       set: function set(newValue) {
-        console.log("用户修改值了", newValue);
         if (newValue == value) return;
         value = newValue;
       },
@@ -208,10 +277,303 @@
     }
   }
 
-  function complieToFunction(template) {
-    console.log(template);
+  var ncname = "[a-zA-Z_][\\-\\.0-9_a-zA-Z]*"; // 下面的这个正则中的：表示匹配命名空间：<div:XXX>
+
+  var qnameCapture = "((?:".concat(ncname, "\\:)?").concat(ncname, ")"); // 匹配前标签开始 <div
+
+  var startTagOpen = new RegExp("^<".concat(qnameCapture)); // 匹配结束的标签
+
+  var endTag = new RegExp("^<\\/".concat(qnameCapture, "[^>]>*>")); // 匹配属性,第一个分组是属性的key，属性的值是分组3/4/5
+
+  var attribute =
+    /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>']+)))?/; //匹配前标签结束
+
+  var startTagClose = /^\s*(\/?)>/; // 匹配{{}}
+
+  function parseHTML(html) {
+    var ELEMENT_TYPE = 1;
+    var TEXT_TYPE = 3;
+    var stack = [];
+    var currentParent;
+    var root; // 创建节点
+
+    function createASTElement(tag, attrs) {
+      return {
+        tag: tag,
+        type: ELEMENT_TYPE,
+        children: [],
+        attrs: attrs,
+        parent: null,
+      };
+    }
+
+    function advance(n) {
+      html = html.substring(n);
+    } // 在解析的各个阶段建立一颗ast语法树
+
+    function start(tag, attrs) {
+      var node = createASTElement(tag, attrs);
+
+      if (!root) {
+        root = node;
+      }
+
+      if (currentParent) {
+        node.parent = currentParent;
+        currentParent.children.push(node);
+      }
+
+      stack.push(node);
+      currentParent = node;
+    }
+
+    function end(tag) {
+      stack.pop();
+      currentParent = stack[stack.length - 1];
+    }
+
+    function _char(text) {
+      text = text.replace(/\s/g, "");
+      text &&
+        currentParent.children.push({
+          type: TEXT_TYPE,
+          text: text,
+          parent: currentParent,
+        });
+    }
+
+    function parseStartTag() {
+      var start = html.match(startTagOpen);
+
+      if (start) {
+        var match = {
+          tagName: [start[1]],
+          //标签名
+          attrs: [],
+        };
+        advance(start[0].length); // 如果不是开始标签的结束，就一直匹配下去
+
+        var attr, _end;
+
+        while (
+          !(_end = html.match(startTagClose)) &&
+          (attr = html.match(attribute))
+        ) {
+          advance(attr[0].length);
+          match.attrs.push({
+            name: attr[1],
+            value: attr[3] || attr[4] || attr[5] || true,
+          });
+        }
+
+        if (_end) {
+          advance(_end[0].length);
+        }
+
+        return match;
+      }
+
+      return false;
+    }
+
+    while (html) {
+      // textEnd如果为0，就是一个开始标签或结束标签
+      //textEnd>0,说明是一个文本
+      var textEnd = html.indexOf("<"); //如果indexOf中的索引是0，就是一个标签
+
+      if (textEnd == 0) {
+        var startTagMatch = parseStartTag();
+
+        if (startTagMatch) {
+          // 解析到开始标签
+          start(startTagMatch.tagName, startTagMatch.attrs);
+          continue;
+        }
+
+        var endTagMatch = html.match(endTag);
+
+        if (endTagMatch) {
+          advance(endTagMatch[0].length);
+          end(endTagMatch[1]);
+          continue;
+        }
+      }
+
+      if (textEnd > 0) {
+        var text = html.substring(0, textEnd); //文本内容
+
+        if (text) {
+          _char(text);
+
+          advance(text.length);
+        }
+
+        continue;
+      }
+    }
+
+    return root;
   }
-  o9;
+
+  var defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g;
+
+  function genProps(attrs) {
+    var str = "";
+
+    for (var i = 0; i < attrs.length; i++) {
+      var attr = attrs[i];
+
+      if (attr.name == "style") {
+        (function () {
+          var obj = {};
+          attr.value.split(";").forEach(function (item) {
+            var _item$split = item.split(":"),
+              _item$split2 = _slicedToArray(_item$split, 2),
+              key = _item$split2[0],
+              value = _item$split2[1];
+
+            obj[key] = value;
+          });
+          attr.value = obj;
+        })();
+      }
+
+      str += "".concat(attr.name, ":").concat(JSON.stringify(attr.value), ",");
+    }
+
+    return "{".concat(str.slice(0, -1), "}");
+  }
+
+  function genChildren(children) {
+    if (children) {
+      return children
+        .map(function (child) {
+          return gen(child);
+        })
+        .join(",");
+    }
+  }
+
+  function gen(node) {
+    if (node.type === 1) {
+      return codegen(node);
+    } else {
+      var text = node.text;
+
+      if (!defaultTagRE.test(text)) {
+        return "_v(".concat(JSON.stringify(text), ")");
+      } else {
+        var tokens = [];
+        var match;
+        defaultTagRE.lastIndex = 0;
+        var lastIndex = 0;
+
+        while ((match = defaultTagRE.exec(text))) {
+          var index = match.index;
+
+          if (index > lastIndex) {
+            tokens.push(JSON.stringify(text.slice(lastIndex, index)));
+          }
+
+          tokens.push("_s(".concat(match[1].trim(), ")"));
+          lastIndex = index + match[0].length;
+        }
+
+        if (lastIndex < text.length) {
+          tokens.push(JSON.stringify(text.slice(lastIndex)));
+        }
+
+        return "_v(".concat(tokens.join("+"), ")");
+      }
+    }
+  }
+
+  function codegen(ast) {
+    var children = genChildren(ast.children);
+    var code = "_c('"
+      .concat(ast.tag, "',")
+      .concat(ast.attrs.length > 0 ? genProps(ast.attrs) : "null")
+      .concat(ast.children.length ? ",".concat(children) : "", ")");
+    return code;
+  }
+
+  function complieToFunction(template) {
+    var ast = parseHTML(template);
+    var code = codegen(ast);
+    code = "with(this){return ".concat(code, "}");
+    var render = new Function(code);
+    return render;
+  }
+
+  function createElementVNode(vm, tag) {
+    var data =
+      arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    var key = data.key;
+
+    if (key) {
+      delete data.key;
+    }
+
+    for (
+      var _len = arguments.length,
+        children = new Array(_len > 3 ? _len - 3 : 0),
+        _key = 3;
+      _key < _len;
+      _key++
+    ) {
+      children[_key - 3] = arguments[_key];
+    }
+
+    return vnode(vm, tag, key, data, children);
+  }
+  function createTextVNode(vm, text) {
+    return vnode(vm, undefined, undefined, undefined, undefined, text);
+  }
+
+  function vnode(vm, tag, key, data, children, text) {
+    return {
+      vm: vm,
+      tag: tag,
+      key: key,
+      data: data,
+      children: children,
+      text: text,
+    };
+  }
+
+  function initLifeCycle(Vue) {
+    Vue.prototype._update = function () {};
+
+    Vue.prototype._render = function () {
+      var vm = this;
+      return vm.$options.render.call(this); //转移后生产的 render方法
+    };
+
+    Vue.prototype._c = function () {
+      return createElementVNode.apply(
+        void 0,
+        [this].concat(Array.prototype.slice.call(arguments))
+      );
+    };
+
+    Vue.prototype._v = function () {
+      return createTextVNode.apply(
+        void 0,
+        [this].concat(Array.prototype.slice.call(arguments))
+      );
+    };
+
+    Vue.prototype._s = function (value) {
+      return JSON.stringify(value);
+    };
+  }
+  function mountComponent(vm, el) {
+    // 1.调用render方法，产生虚拟dom
+    vm._update(vm._render()); //vm.$options.render,返回虚拟节点
+    // 2.根据虚拟dom产生真实dom
+    // 3.插入到el元素中
+  } // 将模板转化为ast模板语法树，ast转化为render函数，后续每次数据更新只执行render函数（无需再转化ast）
+  // render函数会产生虚拟节点，根据创造的虚拟节点创造真实Dom
 
   // 给Vue增加初始化方法
   function initMixin(Vue) {
@@ -252,6 +614,8 @@
           opts.render = render;
         }
       }
+
+      mountComponent(vm);
     };
   } // script标签引入的vue，编译过程在浏览器
   // runtime是不包含编译的，编译时通过loader进行转译.vue文件，用runtime不能使用template(在mian.js中，.vue文件有loader转译，因此不影响)
@@ -262,6 +626,7 @@
   } // 扩展了init方法
 
   initMixin(Vue);
+  initLifeCycle(Vue);
 
   return Vue;
 });

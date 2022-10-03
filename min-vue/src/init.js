@@ -1,6 +1,7 @@
 // 给Vue增加初始化方法
 import { initState } from "./state";
 import { complieToFunction } from "./compiler/index";
+import { mountComponent } from "./lifecycle";
 export function initMixin(Vue) {
   Vue.prototype._init = function (options) {
     const vm = this;
@@ -38,6 +39,7 @@ export function initMixin(Vue) {
         opts.render = render;
       }
     }
+    mountComponent(vm, el);
   };
 }
 // script标签引入的vue，编译过程在浏览器

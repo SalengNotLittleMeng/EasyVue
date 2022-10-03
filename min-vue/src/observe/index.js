@@ -37,11 +37,9 @@ export function defineReactive(target, key, value) {
   observe(value);
   Object.defineProperty(target, key, {
     get() {
-      console.log("用户取值了", value);
       return value;
     },
     set(newValue) {
-      console.log("用户修改值了", newValue);
       if (newValue == value) return;
       value = newValue;
     },
