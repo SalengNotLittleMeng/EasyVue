@@ -194,6 +194,7 @@
         key: "depend",
         value: function depend() {
           // 不希望放置重复的watcher
+          // 这里在添加一个watch时，这个watch也会将这个dep添加到自己的观察队列中
           Dep.target.addDep(this);
         },
       },
@@ -201,7 +202,7 @@
         key: "addSub",
         value: function addSub(watcher) {
           this.subs.push(watcher);
-        },
+        }, // 通知所有观察了这个dep的watch更新视图
       },
       {
         key: "notify",
@@ -267,11 +268,12 @@
   function defineReactive(target, key, value) {
     // 闭包，从外部拿到value
     // 如果劫持到的属性依然是一个对象，就应该递归劫持所有属性，深度属性劫持
-    observe(value); // 每一个属性都有一个dep
+    observe(value); // 每一个属性都有一个dep，这里是闭包，因此变量不会销毁
 
     var dep = new Dep();
     Object.defineProperty(target, key, {
       get: function get() {
+        // 如果Dep.target不为null,证明这个属性被某个watch依赖
         if (Dep.target) {
           dep.depend();
         }
@@ -280,7 +282,8 @@
       },
       set: function set(newValue) {
         if (newValue == value) return;
-        value = newValue;
+        value = newValue; // 通知所有依赖这个属性的watch更新视图
+
         dep.notify();
       },
     });
@@ -362,23 +365,26 @@
 
       if (!root) {
         root = node;
-      }
+      } // 如果有栈中有值，就将栈中最后一个元素作为parent
 
       if (currentParent) {
+        // 这里要同时建立节点的父子关系
         node.parent = currentParent;
         currentParent.children.push(node);
-      }
+      } // 将当前的节点推入栈中，并更新当前的父节点
 
       stack.push(node);
       currentParent = node;
     }
 
     function end(tag) {
+      // 出栈并更新当前父节点
       stack.pop();
       currentParent = stack[stack.length - 1];
     }
 
     function _char(text) {
+      // 处理文本节点
       text = text.replace(/\s/g, "");
       text &&
         currentParent.children.push({
@@ -386,7 +392,7 @@
           text: text,
           parent: currentParent,
         });
-    }
+    } // 解析开始标签，收集属性
 
     function parseStartTag() {
       var start = html.match(startTagOpen);
@@ -467,7 +473,7 @@
     var str = "";
 
     for (var i = 0; i < attrs.length; i++) {
-      var attr = attrs[i];
+      var attr = attrs[i]; // style要做特殊处理
 
       if (attr.name == "style") {
         (function () {
@@ -488,7 +494,7 @@
     }
 
     return "{".concat(str.slice(0, -1), "}");
-  }
+  } // 将children生成代码
 
   function genChildren(children) {
     if (children) {
@@ -501,16 +507,20 @@
   }
 
   function gen(node) {
+    // 如果有子节点就递归生成
     if (node.type === 1) {
       return codegen(node);
     } else {
       var text = node.text;
 
       if (!defaultTagRE.test(text)) {
+        // 文本节点直接格式化处理
         return "_v(".concat(JSON.stringify(text), ")");
       } else {
+        // 操作模板语法，将模板语法替换为变量
         var tokens = [];
-        var match;
+        var match; // 注意这里将正则的lastIndex重置为0，每次的行为一致
+
         defaultTagRE.lastIndex = 0;
         var lastIndex = 0;
 
@@ -518,21 +528,23 @@
           var index = match.index;
 
           if (index > lastIndex) {
+            // 添加模板引擎之前/之后的内容
             tokens.push(JSON.stringify(text.slice(lastIndex, index)));
-          }
+          } // 将模板中的变量添加进去
 
           tokens.push("_s(".concat(match[1].trim(), ")"));
           lastIndex = index + match[0].length;
         }
 
         if (lastIndex < text.length) {
+          // 添加一般的文本
           tokens.push(JSON.stringify(text.slice(lastIndex)));
         }
 
         return "_v(".concat(tokens.join("+"), ")");
       }
     }
-  }
+  } // 将ast语法树生成render函数
 
   function codegen(ast) {
     var children = genChildren(ast.children);
@@ -545,7 +557,8 @@
 
   function complieToFunction(template) {
     var ast = parseHTML(template);
-    var code = codegen(ast);
+    var code = codegen(ast); // 绑定this并利用Function生成函数
+
     code = "with(this){return ".concat(code, "}");
     var render = new Function(code);
     return render;
@@ -610,16 +623,17 @@
       {
         key: "get",
         value: function get() {
-          // 会去vm上取值
+          // 将自己添加到Dep的静态属性上，让之后每个dep都可以添加到这个watch
           Dep.target = this;
-          this.getter();
+          this.getter(); // 将这个静态属性置为空
+
           Dep.target = null;
         },
       },
       {
         key: "update",
         value: function update() {
-          // 重新渲染
+          // 重新渲染，这里为了防止多次更新视图，采用了事件环的方式合并多次操作
           queueWatcher(this);
         },
       },
@@ -783,21 +797,21 @@
       // 渲染时会去实例上取值
       var vm = this;
       return vm.$options.render.call(this); //转移后生产的 render方法
-    };
+    }; // 创造虚拟节点
 
     Vue.prototype._c = function () {
       return createElementVNode.apply(
         void 0,
         [this].concat(Array.prototype.slice.call(arguments))
       );
-    };
+    }; // 创建文本虚拟节点
 
     Vue.prototype._v = function () {
       return createTextVNode.apply(
         void 0,
         [this].concat(Array.prototype.slice.call(arguments))
       );
-    };
+    }; // 创建普通文字节点
 
     Vue.prototype._s = function (value) {
       if (_typeof(value) !== "object") return value;

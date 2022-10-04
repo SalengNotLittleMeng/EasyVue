@@ -38,18 +38,23 @@ export function parseHTML(html) {
     if (!root) {
       root = node;
     }
+    // 如果有栈中有值，就将栈中最后一个元素作为parent
     if (currentParent) {
+      // 这里要同时建立节点的父子关系
       node.parent = currentParent;
       currentParent.children.push(node);
     }
+    // 将当前的节点推入栈中，并更新当前的父节点
     stack.push(node);
     currentParent = node;
   }
   function end(tag) {
+    // 出栈并更新当前父节点
     stack.pop();
     currentParent = stack[stack.length - 1];
   }
   function char(text) {
+    // 处理文本节点
     text = text.replace(/\s/g, "");
     text &&
       currentParent.children.push({
@@ -58,6 +63,7 @@ export function parseHTML(html) {
         parent: currentParent,
       });
   }
+  // 解析开始标签，收集属性
   function parseStartTag() {
     const start = html.match(startTagOpen);
     if (start) {

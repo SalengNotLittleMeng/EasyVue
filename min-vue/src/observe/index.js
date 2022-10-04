@@ -36,10 +36,11 @@ export function defineReactive(target, key, value) {
   // 闭包，从外部拿到value
   // 如果劫持到的属性依然是一个对象，就应该递归劫持所有属性，深度属性劫持
   observe(value);
-  // 每一个属性都有一个dep
+  // 每一个属性都有一个dep，这里是闭包，因此变量不会销毁
   let dep = new Dep();
   Object.defineProperty(target, key, {
     get() {
+      // 如果Dep.target不为null,证明这个属性被某个watch依赖
       if (Dep.target) {
         dep.depend();
       }
@@ -48,6 +49,7 @@ export function defineReactive(target, key, value) {
     set(newValue) {
       if (newValue == value) return;
       value = newValue;
+      // 通知所有依赖这个属性的watch更新视图
       dep.notify();
     },
   });

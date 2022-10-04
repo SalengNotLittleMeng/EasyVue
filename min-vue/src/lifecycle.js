@@ -52,12 +52,15 @@ export function initLifeCycle(Vue) {
     const vm = this;
     return vm.$options.render.call(this); //转移后生产的 render方法
   };
+  // 创造虚拟节点
   Vue.prototype._c = function () {
     return createElementVNode(this, ...arguments);
   };
+  // 创建文本虚拟节点
   Vue.prototype._v = function () {
     return createTextVNode(this, ...arguments);
   };
+  // 创建普通文字节点
   Vue.prototype._s = function (value) {
     if (typeof value !== "object") return value;
     return JSON.stringify(value);

@@ -12,13 +12,14 @@ class Watcher {
     this.get();
   }
   get() {
-    // 会去vm上取值
+    // 将自己添加到Dep的静态属性上，让之后每个dep都可以添加到这个watch
     Dep.target = this;
     this.getter();
+    // 将这个静态属性置为空
     Dep.target = null;
   }
   update() {
-    // 重新渲染
+    // 重新渲染，这里为了防止多次更新视图，采用了事件环的方式合并多次操作
     queueWatcher(this);
   }
   addDep(dep) {
