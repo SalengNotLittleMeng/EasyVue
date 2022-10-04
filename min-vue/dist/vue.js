@@ -179,6 +179,45 @@
     };
   });
 
+  var id$1 = 0;
+
+  var Dep = /*#__PURE__*/ (function () {
+    function Dep() {
+      _classCallCheck(this, Dep);
+
+      this.id = id$1++;
+      this.subs = [];
+    }
+
+    _createClass(Dep, [
+      {
+        key: "depend",
+        value: function depend() {
+          // 不希望放置重复的watcher
+          Dep.target.addDep(this);
+        },
+      },
+      {
+        key: "addSub",
+        value: function addSub(watcher) {
+          this.subs.push(watcher);
+        },
+      },
+      {
+        key: "notify",
+        value: function notify() {
+          this.subs.forEach(function (watcher) {
+            watcher.update();
+          });
+        },
+      },
+    ]);
+
+    return Dep;
+  })();
+
+  Dep.target = null;
+
   var Observe = /*#__PURE__*/ (function () {
     function Observe(data) {
       _classCallCheck(this, Observe);
@@ -228,14 +267,21 @@
   function defineReactive(target, key, value) {
     // 闭包，从外部拿到value
     // 如果劫持到的属性依然是一个对象，就应该递归劫持所有属性，深度属性劫持
-    observe(value);
+    observe(value); // 每一个属性都有一个dep
+
+    var dep = new Dep();
     Object.defineProperty(target, key, {
       get: function get() {
+        if (Dep.target) {
+          dep.depend();
+        }
+
         return value;
       },
       set: function set(newValue) {
         if (newValue == value) return;
         value = newValue;
+        dep.notify();
       },
     });
   }
@@ -505,9 +551,11 @@
     return render;
   }
 
-  function createElementVNode(vm, tag) {
-    var data =
-      arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  function createElementVNode(vm, tag, data) {
+    if (data == null) {
+      data = {};
+    }
+
     var key = data.key;
 
     if (key) {
@@ -528,7 +576,8 @@
   }
   function createTextVNode(vm, text) {
     return vnode(vm, undefined, undefined, undefined, undefined, text);
-  }
+  } // ast是描述JS，css,等语言本身的情况的
+  // 虚拟dom是描述dom节点的
 
   function vnode(vm, tag, key, data, children, text) {
     return {
@@ -541,10 +590,197 @@
     };
   }
 
+  var id = 0;
+
+  var Watcher = /*#__PURE__*/ (function () {
+    function Watcher(vm, fn) {
+      _classCallCheck(this, Watcher);
+
+      this.id = id++;
+      this.renderWatcher = vm.options; // getter意味着调用这个函数会发生取值
+
+      this.getter = fn; // 让watcher去记住所有dep，后续实现计算属性和清理工作需要使用
+
+      this.deps = [];
+      this.depsId = new Set();
+      this.get();
+    }
+
+    _createClass(Watcher, [
+      {
+        key: "get",
+        value: function get() {
+          // 会去vm上取值
+          Dep.target = this;
+          this.getter();
+          Dep.target = null;
+        },
+      },
+      {
+        key: "update",
+        value: function update() {
+          // 重新渲染
+          queueWatcher(this);
+        },
+      },
+      {
+        key: "addDep",
+        value: function addDep(dep) {
+          // 一个组件对应着多个属性，重复的属性也不用记录
+          var id = dep.id;
+
+          if (!this.depsId.has(id)) {
+            this.deps.push(dep);
+            this.depsId.add(id);
+            dep.addSub(this);
+          }
+        },
+      },
+      {
+        key: "run",
+        value: function run() {
+          this.get();
+        },
+      },
+    ]);
+
+    return Watcher;
+  })();
+
+  var queue = [];
+  var has = {};
+  var pending = false;
+
+  function flushSchedulerQueue() {
+    var flushQueue = queue.slice(0);
+    flushQueue.forEach(function (q) {
+      q.run();
+    });
+    queue = [];
+    has = {};
+    pending = false;
+  }
+
+  function queueWatcher(watcher) {
+    var id = watcher.id;
+
+    if (!has[id]) {
+      queue.push(watcher);
+      has[id] = true; //    不论update执行多少次，只执行一轮刷新操作
+      // 多次操作只走第一次，后面的操作都会被放到队列里，等第一次执行完后下一个事件环执行
+
+      if (!pending) {
+        timerFunc(flushSchedulerQueue);
+        pending = true;
+      }
+    }
+  }
+
+  var callbacks = [];
+  var waiting = false;
+
+  function flushCallbacks() {
+    var cbs = callbacks.slice(0);
+    cbs.forEach(function (cb) {
+      return cb();
+    });
+    waiting = false;
+    callbacks = [];
+  } // nextTick不是创建了一个异步任务，而是将这个任务维护到了队列中
+  // nextTick内部采用优雅降级：promise->MutationObserver->setImmediate->setTimeout
+
+  var timerFunc;
+
+  if (Promise) {
+    timerFunc = function timerFunc(fn) {
+      Promise.resolve().then(fn);
+    };
+  } else if (MutationObserver) {
+    // 这里传入的回调是异步任务
+    timerFunc = function timerFunc(fn) {
+      var observe = new MutationObserver(fn);
+      var textNode = document.createElement(1);
+      observe.observe(textNode, {
+        characterData: true,
+      });
+      textNode.textContent = 2;
+    };
+  } else if (setImmediate) {
+    timerFunc = function timerFunc(fn) {
+      setImmediate(fn);
+    };
+  } else {
+    timerFunc = function timerFunc(fn) {
+      setTimeout(fn, 0);
+    };
+  }
+
+  var nextTick = function nextTick(cb) {
+    callbacks.push(cb);
+
+    if (!waiting) {
+      timerFunc(flushCallbacks);
+      waiting = true;
+    }
+  }; // 需要给每个属性增加dep,
+
+  function createElm(vnode) {
+    var tag = vnode.tag,
+      data = vnode.data,
+      children = vnode.children,
+      text = vnode.text;
+
+    if (typeof tag == "string") {
+      // 将真实节点和虚拟节点进行对应，为后续diff算法做准备
+      vnode.el = document.createElement(tag);
+      patchProps(vnode.el, data);
+      children.forEach(function (child) {
+        vnode.el.appendChild(createElm(child));
+      });
+    } else {
+      vnode.el = document.createTextNode(text);
+    }
+
+    return vnode.el;
+  }
+
+  function patchProps(el, props) {
+    for (var key in props) {
+      if (key == "style") {
+        for (var styleName in props.style) {
+          el.style[styleName] = props.style[styleName];
+        }
+      } else {
+        el.setAttribute(key, props[key]);
+      }
+    }
+  }
+
+  function patch(oldVNode, vnode) {
+    var isRealElement = oldVNode.nodeType;
+
+    if (isRealElement) {
+      // 获取真实元素
+      var elm = oldVNode; // 拿到父元素
+
+      var parentElm = elm.parentNode;
+      var newElm = createElm(vnode);
+      parentElm.insertBefore(newElm, elm.nextSibiling);
+      parentElm.removeChild(elm);
+      return newElm;
+    }
+  }
+
   function initLifeCycle(Vue) {
-    Vue.prototype._update = function () {};
+    Vue.prototype._update = function (vnode) {
+      // patch既有初始化功能，又有更新的功能
+      var vm = this;
+      var el = vm.$el;
+      vm.$el = patch(el, vnode);
+    };
 
     Vue.prototype._render = function () {
+      // 渲染时会去实例上取值
       var vm = this;
       return vm.$options.render.call(this); //转移后生产的 render方法
     };
@@ -564,13 +800,18 @@
     };
 
     Vue.prototype._s = function (value) {
+      if (_typeof(value) !== "object") return value;
       return JSON.stringify(value);
     };
   }
   function mountComponent(vm, el) {
-    // 1.调用render方法，产生虚拟dom
-    vm._update(vm._render()); //vm.$options.render,返回虚拟节点
-    // 2.根据虚拟dom产生真实dom
+    vm.$el = el;
+
+    var updateComponent = function updateComponent() {
+      vm._update(vm._render()); //vm.$options.render,返回虚拟节点
+    }; // 1.调用render方法，产生虚拟dom
+
+    new Watcher(vm, updateComponent, true); // 2.根据虚拟dom产生真实dom
     // 3.插入到el元素中
   } // 将模板转化为ast模板语法树，ast转化为render函数，后续每次数据更新只执行render函数（无需再转化ast）
   // render函数会产生虚拟节点，根据创造的虚拟节点创造真实Dom
@@ -615,7 +856,7 @@
         }
       }
 
-      mountComponent(vm);
+      mountComponent(vm, el);
     };
   } // script标签引入的vue，编译过程在浏览器
   // runtime是不包含编译的，编译时通过loader进行转译.vue文件，用runtime不能使用template(在mian.js中，.vue文件有loader转译，因此不影响)
@@ -625,6 +866,7 @@
     this._init(options);
   } // 扩展了init方法
 
+  Vue.prototype.$nextTick = nextTick;
   initMixin(Vue);
   initLifeCycle(Vue);
 

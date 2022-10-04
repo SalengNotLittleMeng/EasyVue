@@ -1,4 +1,5 @@
 import { newArrayProto } from "./array";
+import Dep from "./dep";
 class Observe {
   constructor(data) {
     // 给数据添加一个表示__ob__,被标识的数据标识已经被观测过了
@@ -35,13 +36,19 @@ export function defineReactive(target, key, value) {
   // 闭包，从外部拿到value
   // 如果劫持到的属性依然是一个对象，就应该递归劫持所有属性，深度属性劫持
   observe(value);
+  // 每一个属性都有一个dep
+  let dep = new Dep();
   Object.defineProperty(target, key, {
     get() {
+      if (Dep.target) {
+        dep.depend();
+      }
       return value;
     },
     set(newValue) {
       if (newValue == value) return;
       value = newValue;
+      dep.notify();
     },
   });
 }
