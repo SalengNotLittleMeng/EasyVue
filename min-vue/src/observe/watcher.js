@@ -1,7 +1,10 @@
 import Dep from "./dep";
+import { pushTarget, popTarget } from "./dep";
 let id = 0;
+// 解析一般data时只会创建一个渲染watcher，当解析计算属性时，会按栈结构去创建计算属性watcher
+// watcher的作用时：当依赖的dep发生更新时，对应地触发某些操作（比如重新渲染）
 class Watcher {
-  constructor(vm, fn) {
+  constructor(vm, fn, options) {
     this.id = id++;
     this.renderWatcher = vm.options;
     // getter意味着调用这个函数会发生取值
@@ -9,18 +12,40 @@ class Watcher {
     // 让watcher去记住所有dep，后续实现计算属性和清理工作需要使用
     this.deps = [];
     this.depsId = new Set();
-    this.get();
+    this.lazy = options.lazy;
+    this.dirty = this.lazy;
+    this.vm = vm;
+    // 计算属性第一次并不执行
+    this.lazy ? undefined : this.get();
+  }
+  evalute() {
+    // 获取到用户函数的返回值，并标识为脏
+    this.value = this.get();
+    this.dirty = false;
   }
   get() {
     // 将自己添加到Dep的静态属性上，让之后每个dep都可以添加到这个watch
-    Dep.target = this;
-    this.getter();
+    pushTarget(this);
+    // 这个getter就是更新函数
+    let value = this.getter.call(this.vm);
     // 将这个静态属性置为空
-    Dep.target = null;
+    popTarget();
+    return value;
   }
   update() {
+    // 当dep是计算属性
+    // 当依赖的值发生变化时dirty是脏值
+    if (this.lazy) {
+      this.dirty = true;
+    }
     // 重新渲染，这里为了防止多次更新视图，采用了事件环的方式合并多次操作
     queueWatcher(this);
+  }
+  depend() {
+    let i = this.deps.length;
+    while (i--) {
+      this.deps[i].depend(); //让计算属性watcher也收集渲染watcher
+    }
   }
   addDep(dep) {
     // 一个组件对应着多个属性，重复的属性也不用记录

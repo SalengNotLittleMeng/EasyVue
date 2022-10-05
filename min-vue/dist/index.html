@@ -8,7 +8,7 @@
   </head>
   <body>
     <div id="app" style="color: red">
-      <h1>{{name}}hello{{age}}</h1>
+      <h1>{{fullName}}</h1>
       <div style="color: red">world</div>
     </div>
   </body>
@@ -19,20 +19,27 @@
       data: {
         name: "zf",
         age: 20,
-        address: {
-          name: 12,
+        firstName: "撒冷",
+        lastName: "小小蒙",
+        arr: [1, 2, 3],
+      },
+      // 计算属性有缓存，本质上也是一个watcher,默认渲染时会创建一个渲染watcher
+      // 计算属性的dep除了要记住计算属性watcher，也要记住渲染watcher
+      computed: {
+        fullName: {
+          get() {
+            console.log(this);
+            return this.firstName + this.lastName;
+          },
+          set(newVal) {
+            console.log(newVal);
+          },
         },
-        list: [{ name: 12 }],
       },
     });
-    console.log(vm);
-    vm.list.push({
-      age: 12,
-    });
-    vm.list[1].age = "123";
+    console.log(vm.fullName);
     vm.name = 12;
-    vm.$nextTick(() => {
-      console.log(document.getElementById("app").innerHTML);
-    });
+    vm.arr.push(1);
+    vm.firstName = "hello";
   </script>
 </html>

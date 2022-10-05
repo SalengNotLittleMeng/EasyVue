@@ -126,6 +126,54 @@
     );
   }
 
+  var id$1 = 0; // 每一个dep都表示一个被依赖的数据，当这个数据变化，跟这些数据关联的视图会同步变化
+
+  var Dep = /*#__PURE__*/ (function () {
+    function Dep() {
+      _classCallCheck(this, Dep);
+
+      this.id = id$1++;
+      this.subs = [];
+    }
+
+    _createClass(Dep, [
+      {
+        key: "depend",
+        value: function depend() {
+          // 不希望放置重复的watcher
+          // 这里在添加一个watch时，这个watch也会将这个dep添加到自己的观察队列中
+          Dep.target.addDep(this);
+        }, // 这个方法是让watcher将自己添加到观察队列的
+      },
+      {
+        key: "addSub",
+        value: function addSub(watcher) {
+          this.subs.push(watcher);
+        }, // 通知所有观察了这个dep的watch更新视图
+      },
+      {
+        key: "notify",
+        value: function notify() {
+          this.subs.forEach(function (watcher) {
+            watcher.update();
+          });
+        },
+      },
+    ]);
+
+    return Dep;
+  })();
+
+  var stack = [];
+  function pushTarget(watcher) {
+    stack.push(watcher);
+    Dep.target = watcher;
+  }
+  function popTarget() {
+    stack.pop();
+    Dep.target = stack[stack.length - 1];
+  }
+
   // 我们希望保留原数组特性并重写部分数组方法
   var oldArrayProto = Array.prototype;
   var newArrayProto = Object.create(oldArrayProto); // 所有变异方法
@@ -173,59 +221,23 @@
 
       if (inserted) {
         ob.observeArray(inserted);
-      }
+      } // 数组变化后通知对应的 watcher实现更新
 
+      ob.dep.notify();
       return result;
     };
   });
 
-  var id$1 = 0;
-
-  var Dep = /*#__PURE__*/ (function () {
-    function Dep() {
-      _classCallCheck(this, Dep);
-
-      this.id = id$1++;
-      this.subs = [];
-    }
-
-    _createClass(Dep, [
-      {
-        key: "depend",
-        value: function depend() {
-          // 不希望放置重复的watcher
-          // 这里在添加一个watch时，这个watch也会将这个dep添加到自己的观察队列中
-          Dep.target.addDep(this);
-        },
-      },
-      {
-        key: "addSub",
-        value: function addSub(watcher) {
-          this.subs.push(watcher);
-        }, // 通知所有观察了这个dep的watch更新视图
-      },
-      {
-        key: "notify",
-        value: function notify() {
-          this.subs.forEach(function (watcher) {
-            watcher.update();
-          });
-        },
-      },
-    ]);
-
-    return Dep;
-  })();
-
-  Dep.target = null;
-
   var Observe = /*#__PURE__*/ (function () {
+    // 给每个对象都增加收集功能
+    // 要给数组和对象本身也增加dep,如果用户增添了属性或数组新增了一项，都会触发dep
     function Observe(data) {
       _classCallCheck(this, Observe);
 
       // 给数据添加一个表示__ob__,被标识的数据标识已经被观测过了
       //data.__ob__=this 直接将this添加到__ob__后，会导致遍历可观测对象时遍历到this，形成死循环
       // 添加属性__ob__并将这个属性设置为不可枚举，使其在遍历时无法被遍历
+      this.dep = new Dep();
       Object.defineProperty(data, "__ob__", {
         value: this,
         enumerable: false,
@@ -239,7 +251,7 @@
         this.observeArray(data); //监控数组中的对象,只将数组中的对象进行挂载
       } else {
         this.walk(data);
-      } // Object.defineProperty只能劫持已经存在的属性l
+      } // Object.defineProperty只能劫持已经存在的属性
     }
 
     _createClass(Observe, [
@@ -265,10 +277,22 @@
     return Observe;
   })();
 
+  function dependArray(value) {
+    // 对数组的每一个元素进行观察
+    for (var i = 0; i < value.length; i++) {
+      // 如果数组中有对象（有__ob__表示是对象且被标记过），那么需要将数组中的所有对象进行观测
+      value[i].__ob__ && value[i].__ob__.dep.depend(); // 如果数组中的子元素还是数组，则继续递归
+
+      if (Array.isArray(value[i])) {
+        dependArray(value[i]);
+      }
+    }
+  }
+
   function defineReactive(target, key, value) {
     // 闭包，从外部拿到value
     // 如果劫持到的属性依然是一个对象，就应该递归劫持所有属性，深度属性劫持
-    observe(value); // 每一个属性都有一个dep，这里是闭包，因此变量不会销毁
+    var childOb = observe(value); // 每一个属性都有一个dep，这里是闭包，因此变量不会销毁
 
     var dep = new Dep();
     Object.defineProperty(target, key, {
@@ -276,6 +300,16 @@
         // 如果Dep.target不为null,证明这个属性被某个watch依赖
         if (Dep.target) {
           dep.depend();
+
+          if (childOb) {
+            // 让数组和对象也实现依赖收集
+            // 如果出现对象套对象的情况，就将这个属性继续放入dep队列观察，深度遍历
+            childOb.dep.depend(); // 当出现数组套数组的情况时，进行深度遍历
+
+            if (Array.isArray(value)) {
+              dependArray(value);
+            }
+          }
         }
 
         return value;
@@ -296,11 +330,180 @@
     return new Observe(data);
   }
 
+  var id = 0; // 解析一般data时只会创建一个渲染watcher，当解析计算属性时，会按栈结构去创建计算属性watcher
+  // watcher的作用时：当依赖的dep发生更新时，对应地触发某些操作（比如重新渲染）
+
+  var Watcher = /*#__PURE__*/ (function () {
+    function Watcher(vm, fn, options) {
+      _classCallCheck(this, Watcher);
+
+      this.id = id++;
+      this.renderWatcher = vm.options; // getter意味着调用这个函数会发生取值
+
+      this.getter = fn; // 让watcher去记住所有dep，后续实现计算属性和清理工作需要使用
+
+      this.deps = [];
+      this.depsId = new Set();
+      this.lazy = options.lazy;
+      this.dirty = this.lazy;
+      this.vm = vm; // 计算属性第一次并不执行
+
+      this.lazy ? undefined : this.get();
+    }
+
+    _createClass(Watcher, [
+      {
+        key: "evalute",
+        value: function evalute() {
+          // 获取到用户函数的返回值，并标识为脏
+          this.value = this.get();
+          this.dirty = false;
+        },
+      },
+      {
+        key: "get",
+        value: function get() {
+          // 将自己添加到Dep的静态属性上，让之后每个dep都可以添加到这个watch
+          pushTarget(this); // 这个getter就是更新函数
+
+          var value = this.getter.call(this.vm); // 将这个静态属性置为空
+
+          popTarget();
+          return value;
+        },
+      },
+      {
+        key: "update",
+        value: function update() {
+          // 当dep是计算属性
+          // 当依赖的值发生变化时dirty是脏值
+          if (this.lazy) {
+            this.dirty = true;
+          } // 重新渲染，这里为了防止多次更新视图，采用了事件环的方式合并多次操作
+
+          queueWatcher(this);
+        },
+      },
+      {
+        key: "depend",
+        value: function depend() {
+          var i = this.deps.length;
+
+          while (i--) {
+            this.deps[i].depend(); //让计算属性watcher也收集渲染watcher
+          }
+        },
+      },
+      {
+        key: "addDep",
+        value: function addDep(dep) {
+          // 一个组件对应着多个属性，重复的属性也不用记录
+          var id = dep.id;
+
+          if (!this.depsId.has(id)) {
+            this.deps.push(dep);
+            this.depsId.add(id);
+            dep.addSub(this);
+          }
+        },
+      },
+      {
+        key: "run",
+        value: function run() {
+          this.get();
+        },
+      },
+    ]);
+
+    return Watcher;
+  })();
+
+  var queue = [];
+  var has = {};
+  var pending = false;
+
+  function flushSchedulerQueue() {
+    var flushQueue = queue.slice(0);
+    flushQueue.forEach(function (q) {
+      q.run();
+    });
+    queue = [];
+    has = {};
+    pending = false;
+  }
+
+  function queueWatcher(watcher) {
+    var id = watcher.id;
+
+    if (!has[id]) {
+      queue.push(watcher);
+      has[id] = true; //    不论update执行多少次，只执行一轮刷新操作
+      // 多次操作只走第一次，后面的操作都会被放到队列里，等第一次执行完后下一个事件环执行
+
+      if (!pending) {
+        timerFunc(flushSchedulerQueue);
+        pending = true;
+      }
+    }
+  }
+
+  var callbacks = [];
+  var waiting = false;
+
+  function flushCallbacks() {
+    var cbs = callbacks.slice(0);
+    cbs.forEach(function (cb) {
+      return cb();
+    });
+    waiting = false;
+    callbacks = [];
+  } // nextTick不是创建了一个异步任务，而是将这个任务维护到了队列中
+  // nextTick内部采用优雅降级：promise->MutationObserver->setImmediate->setTimeout
+
+  var timerFunc;
+
+  if (Promise) {
+    timerFunc = function timerFunc(fn) {
+      Promise.resolve().then(fn);
+    };
+  } else if (MutationObserver) {
+    // 这里传入的回调是异步任务
+    timerFunc = function timerFunc(fn) {
+      var observe = new MutationObserver(fn);
+      var textNode = document.createElement(1);
+      observe.observe(textNode, {
+        characterData: true,
+      });
+      textNode.textContent = 2;
+    };
+  } else if (setImmediate) {
+    timerFunc = function timerFunc(fn) {
+      setImmediate(fn);
+    };
+  } else {
+    timerFunc = function timerFunc(fn) {
+      setTimeout(fn, 0);
+    };
+  }
+
+  var nextTick = function nextTick(cb) {
+    callbacks.push(cb);
+
+    if (!waiting) {
+      timerFunc(flushCallbacks);
+      waiting = true;
+    }
+  }; // 需要给每个属性增加dep,
+
   function initState(vm) {
     var opts = vm.$options;
 
     if (opts.data) {
       initData(vm);
+    }
+
+    if (opts.computed) {
+      initComputed(vm);
     }
   }
 
@@ -324,6 +527,53 @@
     for (var key in data) {
       proxy(vm, "_data", key);
     }
+  }
+
+  function initComputed(vm) {
+    var computed = vm.$options.computed;
+    var watchers = (vm._computedWatchers = {});
+
+    for (var key in computed) {
+      var userDef = computed[key]; // 我们需要监控计算属性中get的变化
+
+      var fn = typeof userDef === "function" ? userDef : userDef.get; // 如果直接new watcher，默认立即执行fn
+
+      watchers[key] = new Watcher(vm, fn, {
+        lazy: true,
+      });
+      defineComputed(vm, key, userDef);
+    }
+  }
+
+  function defineComputed(target, key, userDef) {
+    typeof userDef === "function" ? userDef : userDef.get;
+
+    var setter = userDef.set || function () {};
+
+    Object.defineProperty(target, key, {
+      get: createComputedGatter(key),
+      set: setter,
+    });
+  } // 计算属性不会手收集依赖，只会让自己的依赖属性去收集依赖
+
+  function createComputedGatter(key) {
+    // 检测是否执行gatter
+    return function () {
+      // 获取到对应属性的watcher
+      var watcher = this._computedWatchers[key];
+
+      if (watcher.dirty) {
+        // 如果是脏的，就去执行用户传入的函数
+        watcher.evalute(); // 求值后dirty变为false，下次就不求值了
+      }
+
+      if (Dep.target) {
+        // 计算属性出栈后还有渲染watcher,应该让计算属性watcher里的属性也去收集渲染watcher
+        watcher.depend();
+      } // 最后返回的是watch上的值
+
+      return watcher.value;
+    };
   }
 
   var ncname = "[a-zA-Z_][\\-\\.0-9_a-zA-Z]*"; // 下面的这个正则中的：表示匹配命名空间：<div:XXX>
@@ -602,141 +852,6 @@
       text: text,
     };
   }
-
-  var id = 0;
-
-  var Watcher = /*#__PURE__*/ (function () {
-    function Watcher(vm, fn) {
-      _classCallCheck(this, Watcher);
-
-      this.id = id++;
-      this.renderWatcher = vm.options; // getter意味着调用这个函数会发生取值
-
-      this.getter = fn; // 让watcher去记住所有dep，后续实现计算属性和清理工作需要使用
-
-      this.deps = [];
-      this.depsId = new Set();
-      this.get();
-    }
-
-    _createClass(Watcher, [
-      {
-        key: "get",
-        value: function get() {
-          // 将自己添加到Dep的静态属性上，让之后每个dep都可以添加到这个watch
-          Dep.target = this;
-          this.getter(); // 将这个静态属性置为空
-
-          Dep.target = null;
-        },
-      },
-      {
-        key: "update",
-        value: function update() {
-          // 重新渲染，这里为了防止多次更新视图，采用了事件环的方式合并多次操作
-          queueWatcher(this);
-        },
-      },
-      {
-        key: "addDep",
-        value: function addDep(dep) {
-          // 一个组件对应着多个属性，重复的属性也不用记录
-          var id = dep.id;
-
-          if (!this.depsId.has(id)) {
-            this.deps.push(dep);
-            this.depsId.add(id);
-            dep.addSub(this);
-          }
-        },
-      },
-      {
-        key: "run",
-        value: function run() {
-          this.get();
-        },
-      },
-    ]);
-
-    return Watcher;
-  })();
-
-  var queue = [];
-  var has = {};
-  var pending = false;
-
-  function flushSchedulerQueue() {
-    var flushQueue = queue.slice(0);
-    flushQueue.forEach(function (q) {
-      q.run();
-    });
-    queue = [];
-    has = {};
-    pending = false;
-  }
-
-  function queueWatcher(watcher) {
-    var id = watcher.id;
-
-    if (!has[id]) {
-      queue.push(watcher);
-      has[id] = true; //    不论update执行多少次，只执行一轮刷新操作
-      // 多次操作只走第一次，后面的操作都会被放到队列里，等第一次执行完后下一个事件环执行
-
-      if (!pending) {
-        timerFunc(flushSchedulerQueue);
-        pending = true;
-      }
-    }
-  }
-
-  var callbacks = [];
-  var waiting = false;
-
-  function flushCallbacks() {
-    var cbs = callbacks.slice(0);
-    cbs.forEach(function (cb) {
-      return cb();
-    });
-    waiting = false;
-    callbacks = [];
-  } // nextTick不是创建了一个异步任务，而是将这个任务维护到了队列中
-  // nextTick内部采用优雅降级：promise->MutationObserver->setImmediate->setTimeout
-
-  var timerFunc;
-
-  if (Promise) {
-    timerFunc = function timerFunc(fn) {
-      Promise.resolve().then(fn);
-    };
-  } else if (MutationObserver) {
-    // 这里传入的回调是异步任务
-    timerFunc = function timerFunc(fn) {
-      var observe = new MutationObserver(fn);
-      var textNode = document.createElement(1);
-      observe.observe(textNode, {
-        characterData: true,
-      });
-      textNode.textContent = 2;
-    };
-  } else if (setImmediate) {
-    timerFunc = function timerFunc(fn) {
-      setImmediate(fn);
-    };
-  } else {
-    timerFunc = function timerFunc(fn) {
-      setTimeout(fn, 0);
-    };
-  }
-
-  var nextTick = function nextTick(cb) {
-    callbacks.push(cb);
-
-    if (!waiting) {
-      timerFunc(flushCallbacks);
-      waiting = true;
-    }
-  }; // 需要给每个属性增加dep,
 
   function createElm(vnode) {
     var tag = vnode.tag,
