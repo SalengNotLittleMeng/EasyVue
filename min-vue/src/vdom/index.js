@@ -24,3 +24,6 @@ function vnode(vm, tag, key, data, children, text) {
     text,
   };
 }
+export function isSameVnode(vnode1, vnode2) {
+  return vnode1.tag === vnode2.tag && vnode1.key === vnode2.key;
+}

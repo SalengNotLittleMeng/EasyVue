@@ -4,19 +4,28 @@ let id = 0;
 // 解析一般data时只会创建一个渲染watcher，当解析计算属性时，会按栈结构去创建计算属性watcher
 // watcher的作用时：当依赖的dep发生更新时，对应地触发某些操作（比如重新渲染）
 class Watcher {
-  constructor(vm, fn, options) {
+  constructor(vm, exprOrFn, options, cb) {
     this.id = id++;
     this.renderWatcher = vm.options;
     // getter意味着调用这个函数会发生取值
-    this.getter = fn;
+    if (typeof exprOrFn === "string") {
+      this.getter = function () {
+        return vm[exprOrFn];
+      };
+    } else {
+      this.getter = exprOrFn;
+    }
     // 让watcher去记住所有dep，后续实现计算属性和清理工作需要使用
     this.deps = [];
     this.depsId = new Set();
     this.lazy = options.lazy;
     this.dirty = this.lazy;
     this.vm = vm;
+    // 标识是否是用户自己的watcher
+    this.user = options.user;
+    this.cb = cb;
     // 计算属性第一次并不执行
-    this.lazy ? undefined : this.get();
+    this.value = this.lazy ? undefined : this.get();
   }
   evalute() {
     // 获取到用户函数的返回值，并标识为脏
@@ -57,7 +66,13 @@ class Watcher {
     }
   }
   run() {
-    this.get();
+    let oldValue = this.value;
+    let newValue = this.get();
+    // user标识用户自定义的watcher
+    if (this.user) {
+      // 监控的值（dep）会收集watcher，如果监控的值(dep)发生了改变，就会执行对应的回调
+      this.cb.call(this.vm, newValue, oldValue);
+    }
   }
 }
 let queue = [];

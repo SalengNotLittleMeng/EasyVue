@@ -334,21 +334,30 @@
   // watcher的作用时：当依赖的dep发生更新时，对应地触发某些操作（比如重新渲染）
 
   var Watcher = /*#__PURE__*/ (function () {
-    function Watcher(vm, fn, options) {
+    function Watcher(vm, exprOrFn, options, cb) {
       _classCallCheck(this, Watcher);
 
       this.id = id++;
       this.renderWatcher = vm.options; // getter意味着调用这个函数会发生取值
 
-      this.getter = fn; // 让watcher去记住所有dep，后续实现计算属性和清理工作需要使用
+      if (typeof exprOrFn === "string") {
+        this.getter = function () {
+          return vm[exprOrFn];
+        };
+      } else {
+        this.getter = exprOrFn;
+      } // 让watcher去记住所有dep，后续实现计算属性和清理工作需要使用
 
       this.deps = [];
       this.depsId = new Set();
       this.lazy = options.lazy;
       this.dirty = this.lazy;
-      this.vm = vm; // 计算属性第一次并不执行
+      this.vm = vm; // 标识是否是用户自己的watcher
 
-      this.lazy ? undefined : this.get();
+      this.user = options.user;
+      this.cb = cb; // 计算属性第一次并不执行
+
+      this.value = this.lazy ? undefined : this.get();
     }
 
     _createClass(Watcher, [
@@ -410,7 +419,13 @@
       {
         key: "run",
         value: function run() {
-          this.get();
+          var oldValue = this.value;
+          var newValue = this.get(); // user标识用户自定义的watcher
+
+          if (this.user) {
+            // 监控的值（dep）会收集watcher，如果监控的值(dep)发生了改变，就会执行对应的回调
+            this.cb.call(this.vm, newValue, oldValue);
+          }
         },
       },
     ]);
@@ -505,6 +520,34 @@
     if (opts.computed) {
       initComputed(vm);
     }
+
+    if (opts.watch) {
+      initWatch(vm);
+    }
+  }
+
+  function initWatch(vm) {
+    var watch = vm.$options.watch;
+
+    for (var key in watch) {
+      var handler = watch[key];
+
+      if (Array.isArray(handler)) {
+        for (var i = 0; i < handler.length; i++) {
+          createWatcher(vm, key, handler[i]);
+        }
+      } else {
+        createWatcher(vm, key, handler);
+      }
+    }
+  }
+
+  function createWatcher(vm, key, handler) {
+    if (typeof handler === "string") {
+      handler = vm[handler];
+    }
+
+    return vm.$watch(key, handler);
   }
 
   function proxy(vm, target, key) {
@@ -573,6 +616,22 @@
       } // 最后返回的是watch上的值
 
       return watcher.value;
+    };
+  }
+
+  function initStateMixin(Vue) {
+    Vue.prototype.$nextTick = nextTick; // 所有watch方法的底层都是在调用$watch
+
+    Vue.prototype.$watch = function (exprOrFn, cb) {
+      // expOrFn可能是一个变量，也可能是函数
+      new Watcher(
+        this,
+        exprOrFn,
+        {
+          user: true,
+        },
+        cb
+      );
     };
   }
 
@@ -853,6 +912,10 @@
     };
   }
 
+  function isSameVnode(vnode1, vnode2) {
+    return vnode1.tag === vnode2.tag && vnode1.key === vnode2.key;
+  }
+
   function createElm(vnode) {
     var tag = vnode.tag,
       data = vnode.data,
@@ -862,7 +925,7 @@
     if (typeof tag == "string") {
       // 将真实节点和虚拟节点进行对应，为后续diff算法做准备
       vnode.el = document.createElement(tag);
-      patchProps(vnode.el, data);
+      patchProps(vnode.el, {}, data);
       children.forEach(function (child) {
         vnode.el.appendChild(createElm(child));
       });
@@ -872,19 +935,33 @@
 
     return vnode.el;
   }
+  function patchProps(el, oldProps, props) {
+    // 老的属性中有，新的没有，要删除老的
+    oldProps.style;
+    var newStyle = props.style; // 对于style
 
-  function patchProps(el, props) {
-    for (var key in props) {
-      if (key == "style") {
+    for (var key in oldProps) {
+      if (!newStyle[key]) {
+        el.style[key] = "";
+      }
+    } // 对于一般属性
+
+    for (var _key in oldProps) {
+      if (!props[_key]) {
+        el.removeAttribute(_key);
+      }
+    } // 用新的覆盖掉老的
+
+    for (var _key2 in props) {
+      if (_key2 == "style") {
         for (var styleName in props.style) {
           el.style[styleName] = props.style[styleName];
         }
       } else {
-        el.setAttribute(key, props[key]);
+        el.setAttribute(_key2, props[_key2]);
       }
     }
   }
-
   function patch(oldVNode, vnode) {
     var isRealElement = oldVNode.nodeType;
 
@@ -897,7 +974,75 @@
       parentElm.insertBefore(newElm, elm.nextSibiling);
       parentElm.removeChild(elm);
       return newElm;
+    } else {
+      // diff算法
+      return patchVnode(oldVNode, vnode);
     }
+  }
+
+  function patchVnode(oldVNode, vnode) {
+    // 两个节点不是同一个节点，直接删除老的，换上新的（没有对比）
+    // 两个节点是同一个节点，判断节点的tag和key，tag和key一样是同一个节点，此时去比较两个节点的属性是否有差异（复用老的节点，将差异的属性更新）
+    // 节点比较完成后，比较两个节点的子节点
+    // 如果不是同一节点，用新节点替换老节点
+    if (!isSameVnode(oldVNode, vnode)) {
+      // 用老节点的父亲进行替换
+      //这里的el属性就是虚拟节点对应的真实节点
+      var _el = createElm(vnode);
+
+      oldVNode.el.parentNode.replaceChild(_el, oldVNode);
+      return _el;
+    } // 如果是文本节点，就比对一下文本的内容
+
+    var el = (vnode.el = oldVNode.el); //复用老节点的元素
+
+    if (!oldVNode.tag) {
+      // 文本的情况
+      if (oldVNode.text !== vnode.text) {
+        el.textContent = vnode.text;
+      }
+    } //是标签，需要比对标签的属性
+
+    patchProps(el, oldVNode.data, vnode.data); // 比较子节点：
+    // 1.一方有儿子，一方没儿子
+    // 2.两方都有儿子
+
+    var oldChildren = oldVNode.children || [];
+    var newChildren = vnode.children || [];
+
+    if (oldChildren.length > 0 && newChildren.length > 0) {
+      // 完整的diff算法
+      updateChild(el, oldChildren, newChildren);
+    } else if (newChildren > 0) {
+      // 老的没有新的有
+      mountChildren(el, newChildren);
+    } else if (oldChildren > 0) {
+      // 新的没有老的有
+      unmountChild(el);
+    }
+
+    return el;
+  }
+
+  function mountChildren(el, children) {
+    for (var i = 0; i < children.length; i++) {
+      var child = newChildren[i];
+      el.appendChild(createElm(child));
+    }
+  }
+
+  function unmountChild(el, children) {
+    el.innerHTML = "";
+  }
+
+  function updateChild(el, oldChildren, newChildren) {
+    var oldEndIndex = oldChildren.length - 1;
+    var newEndIndex = newChildren.length - 1;
+    var oldStartVnode = oldChildren[0];
+    var newStartVnode = newChildren[0];
+    var oldEndVnode = oldChildren[oldEndIndex];
+    var newEndVnode = newChildren[newEndIndex];
+    console.log(oldStartVnode, newStartVnode, oldEndVnode, newEndVnode);
   }
 
   function initLifeCycle(Vue) {
@@ -995,9 +1140,35 @@
     this._init(options);
   } // 扩展了init方法
 
-  Vue.prototype.$nextTick = nextTick;
-  initMixin(Vue);
-  initLifeCycle(Vue);
+  initMixin(Vue); // 提供了_update()和_render两个方法
+
+  initLifeCycle(Vue); // 实现了$nextTick和$watch
+
+  initStateMixin(Vue); // diff算法是一个平级比较的过程，父亲不能跟儿子进行比对
+
+  var render = complieToFunction(
+    '<div style="color: red">\n    <li key="a">a</li>\n    <li key="b">b</li>\n    <li key="c">c</li>\n</div>'
+  );
+  var vm1 = new Vue({
+    data: {
+      name: "zf",
+    },
+  });
+  var preNode = render.call(vm1);
+  var el = createElm(preNode);
+  var render2 = complieToFunction(
+    '<div style="color: red ;background: blue;">\n    <li key="a">a</li>\n    <li key="b">b</li>\n    <li key="c">c</li>\n    <li key="d">d</li>\n</div>'
+  );
+  new Vue({
+    data: {
+      name: "zf",
+    },
+  });
+  var nextVode = render2.call(vm1);
+  patch(preNode, nextVode); // console.log(preNode)
+  // console.log(nextVode)
+
+  document.body.appendChild(el);
 
   return Vue;
 });

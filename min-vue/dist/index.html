@@ -9,7 +9,7 @@
   <body>
     <div id="app" style="color: red">
       <h1>{{fullName}}</h1>
-      <div style="color: red">world</div>
+      <div style="color: red; background: blue">world</div>
     </div>
   </body>
   <script src="./vue.js"></script>
@@ -28,18 +28,19 @@
       computed: {
         fullName: {
           get() {
-            console.log(this);
             return this.firstName + this.lastName;
           },
-          set(newVal) {
-            console.log(newVal);
-          },
+          set(newVal) {},
         },
       },
+      watch: {
+        firstName(newValue, oldValue) {},
+      },
     });
-    console.log(vm.fullName);
     vm.name = 12;
     vm.arr.push(1);
-    vm.firstName = "hello";
+    setTimeout(() => {
+      vm.firstName = "hello";
+    });
   </script>
 </html>
