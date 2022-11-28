@@ -20,16 +20,17 @@ let render = complieToFunction(`<div style="color: red">
     <li key="a">a</li>
     <li key="b">b</li>
     <li key="c">c</li>
+    <li key="d">d</li>
 </div>`);
 let vm1 = new Vue({ data: { name: "zf" } });
 let preNode = render.call(vm1);
 let el = createElm(preNode);
 
 let render2 = complieToFunction(`<div style="color: red ;background: blue;">
-    <li key="a">a</li>
     <li key="b">b</li>
     <li key="c">c</li>
     <li key="d">d</li>
+    <li key="a">a</li>
 </div>`);
 let vm2 = new Vue({ data: { name: "zf" } });
 let nextVode = render2.call(vm1);

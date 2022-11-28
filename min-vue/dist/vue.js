@@ -935,9 +935,13 @@
 
     return vnode.el;
   }
-  function patchProps(el, oldProps, props) {
+  function patchProps(el) {
+    var oldProps =
+      arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var props =
+      arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
     // 老的属性中有，新的没有，要删除老的
-    oldProps.style;
+    oldProps.style || {};
     var newStyle = props.style; // 对于style
 
     for (var key in oldProps) {
@@ -978,7 +982,7 @@
       // diff算法
       return patchVnode(oldVNode, vnode);
     }
-  }
+  } // 利用diff算法更新两个节点
 
   function patchVnode(oldVNode, vnode) {
     // 两个节点不是同一个节点，直接删除老的，换上新的（没有对比）
@@ -1036,6 +1040,10 @@
   }
 
   function updateChild(el, oldChildren, newChildren) {
+    // 为了增高性能，会有一些优化手段
+    // vue2中采用双指针的方式比较两个节点
+    var oldStartIndex = 0;
+    var newStartIndex = 0;
     var oldEndIndex = oldChildren.length - 1;
     var newEndIndex = newChildren.length - 1;
     var oldStartVnode = oldChildren[0];
@@ -1043,6 +1051,102 @@
     var oldEndVnode = oldChildren[oldEndIndex];
     var newEndVnode = newChildren[newEndIndex];
     console.log(oldStartVnode, newStartVnode, oldEndVnode, newEndVnode);
+
+    function makeIndexByKey(children) {
+      var map = {};
+      children.forEach(function (child, index) {
+        map[child.key] = index;
+      });
+      return map;
+    }
+
+    var map = makeIndexByKey(oldChildren);
+
+    while (oldStartIndex <= oldEndIndex && newStartIndex <= newEndIndex) {
+      // 有一方的头指针大于尾部指针，则停止循环
+      // 如果是相同节点，则递归比较子节点
+      if (!oldStartVnode) {
+        // 处理置空节点产生的undefind的问题
+        oldStartVnode = oldChildren[++oldStartIndex];
+      } else if (!oldEndVnode) {
+        // 处理置空节点产生的undefind的问题
+        oldEndVnode = oldChildren[--oldEndIndex];
+      } else if (isSameVnode(oldStartVnode, newStartVnode)) {
+        patchVnode(oldStartVnode, newStartVnode); // 指针移动
+
+        oldStartVnode = oldChildren[++oldStartIndex];
+        newStartVnode = newChildren[++newStartIndex];
+      } // 当首个元素不同时反向比对
+      else if (isSameVnode(oldEndVnode, newEndVnode)) {
+        patchVnode(oldEndVnode, newEndVnode);
+        oldEndVnode = oldChildren[--oldEndIndex];
+        newEndVnode = newChildren[--newEndIndex];
+      } // 交叉比对，优化reverse方法 abcd__>dabc,处理了倒叙和排序的情况
+      else if (isSameVnode(oldEndVnode, newStartVnode)) {
+        patchVnode(oldEndVnode, newStartVnode); // 将老的尾部移动到老的前面去（变为了新前对旧前）
+        // insertBefore具有移动性，会将原来的元素移动走
+
+        el.insertBefore(oldEndVnode.el, oldStartVnode.el);
+        oldEndVnode = oldChildren[--oldEndIndex];
+        newStartVnode = newChildren[++newStartIndex];
+      } else if (isSameVnode(oldStartVnode, newEndVnode)) {
+        patchVnode(oldStartVnode, newEndVnode); // 将老的尾部移动到老的前面去（变为了新前对旧前）
+        // insertBefore具有移动性，会将原来的元素移动走
+
+        el.insertBefore(oldStartVnode.el, oldEndVnode.el.nextSibiling);
+        oldStartVnode = oldChildren[++oldStartIndex];
+        newEndVnode = newChildren[--newEndIndex];
+      } else {
+        var _newStartVnode;
+
+        // 给动态列表添加key时，尽量避免使用索引，可能导致错误复用
+        // 乱序比对:根据老的列表做一个映射关系，用新的逐个比对查找，找到移动，找不到添加，多出的删除
+        // 如果拿到说明是要移动的索引
+        var moveIndex =
+          map[
+            (_newStartVnode = newStartVnode) === null ||
+            _newStartVnode === void 0
+              ? void 0
+              : _newStartVnode.key
+          ];
+
+        if (moveIndex !== undefined) {
+          // 找到对应的虚拟节点进行复用
+          var moveVnode = oldChildren[moveIndex];
+          el.insertBefore(moveVnode.el, oldStartVnode.el);
+          oldChildren[moveIndex] = undefined; //表示这个节点已经被移走了
+          // 递归比较属性和子节点
+
+          patchVnode(moveVnode, newStartVnode);
+        } else {
+          // 无法找到老节点
+          el.insertBefore(createElm(newStartVnode), oldStartVnode.el);
+        }
+
+        newStartVnode = newChildren[++newStartIndex];
+      }
+    } // 多出元素删除，缺少元素添加
+    // 相比于原有的数组有新增元素，尾部对新增元素进行添加
+
+    if (newStartIndex <= newEndIndex) {
+      for (var i = newStartIndex; i <= newEndIndex; i++) {
+        var childEl = createElm(newChildren[i]); // 这里也有可能向前追加
+
+        var anchor = newChildren[newEndIndex + 1]
+          ? newChildren[newEndIndex + 1].el
+          : null;
+        el.insertBefore(childEl, anchor); //  anchor为null时，则等价于appendChild
+      }
+    } // 相比于原有数组尾部减少元素，对被减少的元素进行删除
+
+    if (oldStartIndex <= oldEndIndex) {
+      for (var _i = oldStartIndex; _i <= oldEndIndex; _i++) {
+        if (oldChildren[_i]) {
+          var _childEl = oldChildren[_i].el;
+          el.removeChild(_childEl);
+        }
+      }
+    }
   }
 
   function initLifeCycle(Vue) {
@@ -1147,7 +1251,7 @@
   initStateMixin(Vue); // diff算法是一个平级比较的过程，父亲不能跟儿子进行比对
 
   var render = complieToFunction(
-    '<div style="color: red">\n    <li key="a">a</li>\n    <li key="b">b</li>\n    <li key="c">c</li>\n</div>'
+    '<div style="color: red">\n    <li key="a">a</li>\n    <li key="b">b</li>\n    <li key="c">c</li>\n    <li key="d">d</li>\n</div>'
   );
   var vm1 = new Vue({
     data: {
@@ -1157,7 +1261,7 @@
   var preNode = render.call(vm1);
   var el = createElm(preNode);
   var render2 = complieToFunction(
-    '<div style="color: red ;background: blue;">\n    <li key="a">a</li>\n    <li key="b">b</li>\n    <li key="c">c</li>\n    <li key="d">d</li>\n</div>'
+    '<div style="color: red ;background: blue;">\n    <li key="b">b</li>\n    <li key="c">c</li>\n    <li key="d">d</li>\n    <li key="a">a</li>\n</div>'
   );
   new Vue({
     data: {
