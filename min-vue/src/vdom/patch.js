@@ -1,7 +1,22 @@
 import { isSameVnode } from "./index";
+function createComponent(vnode) {
+  let i = vnode.data;
+  if ((i = i.hook) && (i = i.init)) {
+    i(vnode); //使用init方法初始化组件，调用$mount()
+  }
+  if (vnode.componentInstance) {
+    return true; //说明是组件
+  }
+}
 export function createElm(vnode) {
   let { tag, data, children, text } = vnode;
   if (typeof tag == "string") {
+    // 创建真实节点需要知道是组件还是真实元素
+
+    if (createComponent(vnode)) {
+      // 这里的$el是在执行$mount后产生的虚拟节点对应的真实节点
+      return vnode.createComponent.$el;
+    }
     // 将真实节点和虚拟节点进行对应，为后续diff算法做准备
     vnode.el = document.createElement(tag);
     patchProps(vnode.el, {}, data);
@@ -41,6 +56,12 @@ export function patchProps(el, oldProps = {}, props = {}) {
   }
 }
 export function patch(oldVNode, vnode) {
+  if (!oldVNode) {
+    // 没有el，表示是组件的挂载
+    //注意这里要修改init中的挂载方法，没有el也可以挂载
+    //vm.$el就是渲染的结果
+    return createElm(vnode);
+  }
   const isRealElement = oldVNode.nodeType;
   if (isRealElement) {
     // 获取真实元素
@@ -122,7 +143,6 @@ function updateChild(el, oldChildren, newChildren) {
 
   let oldEndVnode = oldChildren[oldEndIndex];
   let newEndVnode = newChildren[newEndIndex];
-  console.log(oldStartVnode, newStartVnode, oldEndVnode, newEndVnode);
   function makeIndexByKey(children) {
     let map = {};
     children.forEach((child, index) => {

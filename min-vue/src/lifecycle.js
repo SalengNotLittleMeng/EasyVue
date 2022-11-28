@@ -6,7 +6,14 @@ export function initLifeCycle(Vue) {
     // patch既有初始化功能，又有更新的功能
     const vm = this;
     const el = vm.$el;
-    vm.$el = patch(el, vnode);
+    // 把组件第一次产生的虚拟节点保存到_vnode上
+    const preVnode = vm._vnode;
+    if (preVnode) {
+      // 之前渲染过
+      vm.$el = patch(preVnode, vnode);
+    } else {
+      vm.$el = patch(el, vnode);
+    }
   };
   Vue.prototype._render = function () {
     // 渲染时会去实例上取值
@@ -32,6 +39,7 @@ export function mountComponent(vm, el) {
   const updateComponent = () => {
     vm._update(vm._render()); //vm.$options.render,返回虚拟节点
   };
+  // 注意，子组件挂载时也会调用这个方法，因此每个子组件也都会对应一个Watcher
   // 1.调用render方法，产生虚拟dom
   const watcher = new Watcher(vm, updateComponent, true);
   // 2.根据虚拟dom产生真实dom
@@ -41,3 +49,12 @@ export function mountComponent(vm, el) {
 
 // 将模板转化为ast模板语法树，ast转化为render函数，后续每次数据更新只执行render函数（无需再转化ast）
 // render函数会产生虚拟节点，根据创造的虚拟节点创造真实Dom
+
+export function callHook(vm, hook) {
+  const handlers = vm.$options[hook];
+  if (handlers) {
+    handlers.forEach((handler) => {
+      handler.call(vm);
+    });
+  }
+}

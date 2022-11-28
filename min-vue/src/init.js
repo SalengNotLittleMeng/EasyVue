@@ -2,11 +2,16 @@
 import { initState } from "./state";
 import { complieToFunction } from "./compiler/index";
 import { mountComponent } from "./lifecycle";
+import { mergeOptions } from "./utils";
+import { callHook } from "./lifecycle";
 export function initMixin(Vue) {
   Vue.prototype._init = function (options) {
     const vm = this;
-    vm.$options = options;
+    // 将用户传入的选项和全局选项进行合并
+    vm.$options = mergeOptions(this.constructor.options, options);
+    callHook(vm, "beforeCreated");
     initState(vm);
+    callHook(vm, "created");
     if (options.el) {
       vm.$mount(options.el);
     }
@@ -15,7 +20,6 @@ export function initMixin(Vue) {
     const vm = this;
     el = document.querySelector(el);
     let opts = vm.$options;
-    console.log(opts);
     // 当没有render函数时
     if (!opts?.render) {
       let template = null;

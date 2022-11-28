@@ -11,9 +11,24 @@
       <h1>{{fullName}}</h1>
       <div style="color: red; background: blue">world</div>
     </div>
+    <div id="root"></div>
   </body>
   <script src="./vue.js"></script>
   <script>
+    Vue.mixin({
+      created() {
+        console.log(1);
+      },
+    });
+    Vue.mixin({
+      created() {
+        console.log(2);
+      },
+    });
+    Vue.component("el-button", {
+      template: `<button>点我</button>`,
+    });
+    console.log(Vue.options);
     const vm = new Vue({
       el: "#app",
       data: {
@@ -37,10 +52,9 @@
         firstName(newValue, oldValue) {},
       },
     });
-    vm.name = 12;
-    vm.arr.push(1);
-    setTimeout(() => {
-      vm.firstName = "hello";
+    let Sub = Vue.extend({
+      template: `<button>点我</button>`,
     });
+    new Sub().$mount("#root");
   </script>
 </html>
