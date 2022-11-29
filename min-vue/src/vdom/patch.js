@@ -15,7 +15,7 @@ export function createElm(vnode) {
 
     if (createComponent(vnode)) {
       // 这里的$el是在执行$mount后产生的虚拟节点对应的真实节点
-      return vnode.createComponent.$el;
+      return vnode.componentInstance.$el;
     }
     // 将真实节点和虚拟节点进行对应，为后续diff算法做准备
     vnode.el = document.createElement(tag);

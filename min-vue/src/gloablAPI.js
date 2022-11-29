@@ -29,6 +29,5 @@ export function initGlobalAPI(Vue) {
     definition =
       typeof definition == "function" ? definition : Vue.extend(definition);
     Vue.options.components[id] = definition;
-    console.log(Vue.options.components, 111);
   };
 }

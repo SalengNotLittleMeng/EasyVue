@@ -8,6 +8,7 @@ export function initLifeCycle(Vue) {
     const el = vm.$el;
     // 把组件第一次产生的虚拟节点保存到_vnode上
     const preVnode = vm._vnode;
+    vm._vnode = vnode;
     if (preVnode) {
       // 之前渲染过
       vm.$el = patch(preVnode, vnode);

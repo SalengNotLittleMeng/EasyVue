@@ -874,9 +874,21 @@
   }
 
   var isReservedTag = function isReservedTag(tag) {
-    return ["a", "div", "span", "ul", "li", "ol", "button", "input"].includes(
-      tag
-    );
+    return [
+      "a",
+      "div",
+      "span",
+      "ul",
+      "li",
+      "ol",
+      "button",
+      "input",
+      "h1",
+      "h2",
+      "h3",
+      "p",
+      "br",
+    ].includes(tag);
   };
 
   function createElementVNode(vm, tag, data) {
@@ -908,7 +920,6 @@
       // Ctor是组件的定义，可能是配置对象（模板选项）或者是Sub（Vue的子类）
       //全局组件是构造函数，否则是对象
 
-      console.log(Ctor);
       return createComponentVNode(vm, tag, key, data, children, Ctor); // 调用完这个方法之后，vnode.componentInstance上
     }
   }
@@ -923,7 +934,6 @@
       // 用于创建真实节点的时候，如果是组件则调用此方法
       init: function init(vnode) {
         // 保存组件的实例到虚拟节点上
-        console.log(vnode);
         var instance = (vnode.componentInstance =
           new vnode.componentOptions.Ctor());
         instance.$mount(); // 执行后instance上增加了$el
@@ -978,7 +988,7 @@
       // 创建真实节点需要知道是组件还是真实元素
       if (createComponent(vnode)) {
         // 这里的$el是在执行$mount后产生的虚拟节点对应的真实节点
-        return vnode.createComponent.$el;
+        return vnode.componentInstance.$el;
       } // 将真实节点和虚拟节点进行对应，为后续diff算法做准备
 
       vnode.el = document.createElement(tag);
@@ -1219,6 +1229,7 @@
       var el = vm.$el; // 把组件第一次产生的虚拟节点保存到_vnode上
 
       var preVnode = vm._vnode;
+      vm._vnode = vnode;
 
       if (preVnode) {
         // 之前渲染过
@@ -1349,6 +1360,7 @@
       var vm = this; // 将用户传入的选项和全局选项进行合并
 
       vm.$options = mergeOptions(this.constructor.options, options);
+      console.log(vm.$options);
       callHook(vm, "beforeCreated");
       initState(vm);
       callHook(vm, "created");
@@ -1430,7 +1442,6 @@
       definition =
         typeof definition == "function" ? definition : Vue.extend(definition);
       Vue.options.components[id] = definition;
-      console.log(Vue.options.components, 111);
     };
   }
 

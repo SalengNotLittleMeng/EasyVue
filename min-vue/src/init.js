@@ -9,6 +9,7 @@ export function initMixin(Vue) {
     const vm = this;
     // 将用户传入的选项和全局选项进行合并
     vm.$options = mergeOptions(this.constructor.options, options);
+    console.log(vm.$options);
     callHook(vm, "beforeCreated");
     initState(vm);
     callHook(vm, "created");

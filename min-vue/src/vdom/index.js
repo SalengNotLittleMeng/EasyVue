@@ -1,7 +1,19 @@
 const isReservedTag = (tag) => {
-  return ["a", "div", "span", "ul", "li", "ol", "button", "input"].includes(
-    tag
-  );
+  return [
+    "a",
+    "div",
+    "span",
+    "ul",
+    "li",
+    "ol",
+    "button",
+    "input",
+    "h1",
+    "h2",
+    "h3",
+    "p",
+    "br",
+  ].includes(tag);
 };
 export function createElementVNode(vm, tag, data, ...children) {
   if (data == null) {
@@ -19,7 +31,6 @@ export function createElementVNode(vm, tag, data, ...children) {
     let Ctor = vm.$options.components[tag]; //组件的构造函数
     // Ctor是组件的定义，可能是配置对象（模板选项）或者是Sub（Vue的子类）
     //全局组件是构造函数，否则是对象
-    console.log(Ctor);
     return createComponentVNode(vm, tag, key, data, children, Ctor);
     // 调用完这个方法之后，vnode.componentInstance上
   }
@@ -33,7 +44,6 @@ function createComponentVNode(vm, tag, key, data, children, Ctor) {
     // 用于创建真实节点的时候，如果是组件则调用此方法
     init(vnode) {
       // 保存组件的实例到虚拟节点上
-      console.log(vnode);
       let instance = (vnode.componentInstance =
         new vnode.componentOptions.Ctor());
       instance.$mount();

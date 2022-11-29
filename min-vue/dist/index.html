@@ -10,6 +10,7 @@
     <div id="app" style="color: red">
       <h1>{{fullName}}</h1>
       <div style="color: red; background: blue">world</div>
+      <el-button></el-button>
     </div>
     <div id="root"></div>
   </body>
@@ -52,9 +53,9 @@
         firstName(newValue, oldValue) {},
       },
     });
-    let Sub = Vue.extend({
-      template: `<button>点我</button>`,
-    });
-    new Sub().$mount("#root");
+    // let Sub = Vue.extend({
+    //   template: `<button>点我</button>`,
+    // });
+    // new Sub().$mount("#root");
   </script>
 </html>
