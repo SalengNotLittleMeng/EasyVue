@@ -52,10 +52,15 @@ export function initMixin(Vue: Class<Component>) {
     initLifecycle(vm);
     initEvents(vm);
     initRender(vm);
+// beforeCreate的生命周期
+// 初始化了生命周期，事件（$on,$off），声明了插槽，$attrs等变量
     callHook(vm, "beforeCreate");
     initInjections(vm); // resolve injections before data/props
     initState(vm);
     initProvide(vm); // resolve provide after data/props
+// create的生命周期
+// 创建了响应式数据和依赖注入相关的API
+// 在此可以拿到响应式的属性，可以在服务端渲染中使用
     callHook(vm, "created");
 
     /* istanbul ignore if */

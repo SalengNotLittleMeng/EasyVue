@@ -104,10 +104,12 @@ export function lifecycleMixin(Vue: Class<Component>) {
     // remove self from parent
     const parent = vm.$parent;
     if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) {
+// 销毁所有子实例（递归销毁）
       remove(parent.$children, vm);
     }
     // teardown watchers
     if (vm._watcher) {
+// 卸载watcher,取消依赖关系
       vm._watcher.teardown();
     }
     let i = vm._watchers.length;
@@ -122,10 +124,12 @@ export function lifecycleMixin(Vue: Class<Component>) {
     // call the last hook...
     vm._isDestroyed = true;
     // invoke destroy hooks on current rendered tree
+// 标记最新的虚拟节点为null
     vm.__patch__(vm._vnode, null);
     // fire destroyed hook
     callHook(vm, "destroyed");
     // turn off all instance listeners.
+// 卸载所有事件
     vm.$off();
     // remove __vue__ reference
     if (vm.$el) {
@@ -202,6 +206,7 @@ export function mountComponent(
     updateComponent,
     noop,
     {
+// 每次重新渲染就会调用before
       before() {
         if (vm._isMounted && !vm._isDestroyed) {
           callHook(vm, "beforeUpdate");
@@ -216,6 +221,7 @@ export function mountComponent(
   // mounted is called for render-created child components in its inserted hook
   if (vm.$vnode == null) {
     vm._isMounted = true;
+// 可以获取$el
     callHook(vm, "mounted");
   }
   return vm;
