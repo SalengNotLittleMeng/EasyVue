@@ -36,7 +36,12 @@ const resolve = (p) => {
     return path.resolve(__dirname, "../", p);
   }
 };
+// web-runtime:运行时，无法解析new Vue传入的模板（template）,web-full:(runtime+模板解析),complier:只有compiler
 
+// cjs:common js,在node中使用
+// esm:import export (es6模块)
+//browser:通过script在浏览器中使用
+// umd：支持global,amd,cjs
 const builds = {
   // Runtime only (CommonJS). Used by bundlers e.g. Webpack & Browserify
   "web-runtime-cjs-dev": {
@@ -279,6 +284,7 @@ function genConfig(name) {
 if (process.env.TARGET) {
   module.exports = genConfig(process.env.TARGET);
 } else {
+// 默认多入口打包
   exports.getBuild = genConfig;
   exports.getAllBuilds = () => Object.keys(builds).map(genConfig);
 }

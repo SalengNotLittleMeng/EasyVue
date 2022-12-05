@@ -27,10 +27,12 @@ Vue.config.getTagNamespace = getTagNamespace;
 Vue.config.isUnknownElement = isUnknownElement;
 
 // install platform runtime directives & components
+// 添加平台的指令与组件
 extend(Vue.options.directives, platformDirectives);
 extend(Vue.options.components, platformComponents);
 
 // install platform patch function
+// 更新，渲染时会调用的核心方法，这里如果是服务端渲染，就是空函数
 Vue.prototype.__patch__ = inBrowser ? patch : noop;
 
 // public mount method
@@ -39,6 +41,7 @@ Vue.prototype.$mount = function (
   hydrating?: boolean
 ): Component {
   el = el && inBrowser ? query(el) : undefined;
+// 组件的挂载，hydrating表示是否是服务端渲染
   return mountComponent(this, el, hydrating);
 };
 

@@ -18,6 +18,7 @@ const idToTemplate = cached((id) => {
 });
 
 const mount = Vue.prototype.$mount;
+// 函数劫持（AOP），将原来的mount函数获取到，之后重写mount，将template变成render函数
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
@@ -49,6 +50,7 @@ Vue.prototype.$mount = function (
             );
           }
         }
+// 给的模板是dom元素
       } else if (template.nodeType) {
         template = template.innerHTML;
       } else {
