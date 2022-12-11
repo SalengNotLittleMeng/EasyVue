@@ -70,4 +70,4 @@ v-show 会根据原先的 display 属性作为原始 display（不会出现块�
 
 v-model 会在内部用 compsing 去优化输入（不会在打字时监听），他包括模板语法和自定义指令两个部分组成，会根据 input 的值去更改绑定方法
 
-v-model 可以绑定组件，该组件传入一个 model 对象，自定义 props 和 emit，可以手动触发绑定
+v-model 可以绑定组件，该组件传入一个 model 对象，自定义 props 和 emit，可以手动触发绑定，如果没有传入则为 value 和 input 事件
