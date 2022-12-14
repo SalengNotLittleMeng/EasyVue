@@ -71,3 +71,9 @@ v-show 会根据原先的 display 属性作为原始 display（不会出现块�
 v-model 会在内部用 compsing 去优化输入（不会在打字时监听），他包括模板语法和自定义指令两个部分组成，会根据 input 的值去更改绑定方法
 
 v-model 可以绑定组件，该组件传入一个 model 对象，自定义 props 和 emit，可以手动触发绑定，如果没有传入则为 value 和 input 事件
+
+vue .sync 修饰符的作用：跟 v-model 一样，实现状态同步(解决重名问题)，在绑定的组件内部可以用 update：xx 触发事件调用，（跟 v-model 类似）
+
+Vue.ues:会进行缓存，如果已经注册过直接返回 this
+
+组件中写 name 的作用：在 Vue 中，有 name 属性的组件可以被递归调用（递归调用需要用 v-if=false 来显示终止），在声明组件的时候如果有 name，则有 Sub.options.components[name]=Sub,将自己的构造函数放在了选项上
