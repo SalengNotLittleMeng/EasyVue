@@ -35,18 +35,18 @@ function _update(oldVnode, vnode) {
     oldDir = oldDirs[key];
     dir = newDirs[key];
     if (!oldDir) {
-      // new directive, bind
+      // new directive, bind    新的指令则调用bind
       callHook(dir, "bind", vnode, oldVnode);
       if (dir.def && dir.def.inserted) {
         dirsWithInsert.push(dir);
       }
     } else {
-      // existing directive, update
+      // existing directive, update 老的指令则调用update
       dir.oldValue = oldDir.value;
       dir.oldArg = oldDir.arg;
       callHook(dir, "update", vnode, oldVnode);
       if (dir.def && dir.def.componentUpdated) {
-        dirsWithPostpatch.push(dir);
+        dirsWithPostpatch.push(dir);  //缓存update的钩子
       }
     }
   }
