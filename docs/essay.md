@@ -100,3 +100,23 @@ diff 算法是评级比较，双方一方有儿子，一方没有则增删，如
 用新的去映射表中查找该元素是否存在，如果存在则移动，不存在则插入，最后删除多余的节点
 
 vue3 增加了最长子序列算法，来降低无效的节点移动（保留相对位置）
+
+虚拟 dom 的优势：跨平台，底层不受限制,无需考虑兼容性问题，同时可以跟 diff 算法配合减小更新幅度
+
+inject/provide:在孙子组件中注入属性（非响应式）
+
+- provide:在当前组件上提供了一个 provide 属性（增加了一个对象）
+- inject 会将设置的 inject 在上层的 provide 中进行递归查找，找到后将其用 defineReactive 定义在当前组件实例上（递归向上层的$parent 中进行查找，找到一个就停止）
+
+$attrs:所有组件上的属性，不包括 props。配置上有属性 inheritAttrs 来标识组件的属性是否都要放在组件的根元素上
+
+$listeners:组件上所有绑定的事件
+
+这两个属性都是用 defineReactive 进行定义的，因此都是响应式的
+
+组件的渲染流程：
+
+    * 利用vue.extend生成组件构造函数((Ctor)解析到非内置标签，去options中寻找注册的组件，尝试走缓存，extend生成子类，子类继承Vue的原型并合并配置)，
+    * 根据组件产生虚拟节点，（添加生命周期钩子，添加事件，vnode上会挂载componentInstance和componentOptions，组件实例上有$el真实节点,$el会在vm._update的时候获取patch创建的真实节点）
+    * 组件初始化，将虚拟节点转化为真实节点，new Sub().$mount()（调用挂载方法，生成render函数并调用，创建watcher）（createCompent->组件的init方法（$mount）,所有组件（children）循环创建真实节点并替换组件节点）
+    * 当组件的渲染流程走完（真实节点替换了组件标签），组件的父组件会执行插入流程
