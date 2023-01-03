@@ -120,3 +120,28 @@ $listeners:组件上所有绑定的事件
     * 根据组件产生虚拟节点，（添加生命周期钩子，添加事件，vnode上会挂载componentInstance和componentOptions，组件实例上有$el真实节点,$el会在vm._update的时候获取patch创建的真实节点）
     * 组件初始化，将虚拟节点转化为真实节点，new Sub().$mount()（调用挂载方法，生成render函数并调用，创建watcher）（createCompent->组件的init方法（$mount）,所有组件（children）循环创建真实节点并替换组件节点）
     * 当组件的渲染流程走完（真实节点替换了组件标签），组件的父组件会执行插入流程
+
+组件更新的几种情况：
+
+    *  data数据更新，依赖收集
+    *  属性更新，可以给组件传入属性，属性变化后更新
+    *  插槽变化更新
+
+组件更新时会复用实例，并调用 updateChildComponent 方法，传入 props,插槽，事件进行比较（prepatch 方法）
+
+之后，组件会：
+_ 执行 toggleObserving(false),将响应式暂时切换为 false（props 已经是响应式了，无需再次转化，防止重复响应式处理）
+_ 更新属性，拿到新的 props 后用 validate 进行验证（类型和合法性，是否有对应的属性）
+_ 更新 listners 和 attrs
+_ 组件更新后会重新给 props 赋值，赋值完成后触发 watcher 更新（由于直接是父组件的响应式数据，因此父组件数据更新后子组件会同步更新）
+
+vue 中的异步组件，主要用作比较大的组件进行异步加载。原理是先渲染一个注释标签，等组件加载完毕后重新渲染（forceUpdate 方法），类似于图片懒加载
+使用异步组件会配合 webpack
+
+组件渲染会确认 Ctor 实例是对象才会渲染，而异步组件的返回值是函数，因此第一次不会渲染
+
+另外，由于异步组件的 Ctor 是函数,默认不会执行 Vue.extend 方法，，因此 Ctor 上没有 cid 属性，没有 cid 属性的就是异步组件，此时就会将 Ctor 赋值给 asyncFactory
+
+解析异步组件时，会调用 resolveAsyncComonpent 方法并传入 asyncFactory 和 Vue,如果解析完返回值是 undefined，那么会创建一个异步组件的占位符（vnode）进行渲染，同时，组件的内部会组装出 Promise 的 resolve 和 reject 方法并向参数中的 Promise 中传入执行，如果返回值是 promise,就会调用 promsie.then，默认渲染 loading,如果状态为 resolve（更改 sync 状态）就渲染重新执行解析方法并生成虚拟节点
+
+组件重新渲染后，factory 上的 resolved/error 已经被挂载实例，就会直接渲染，否则如果返回的依旧是 promise 的话，会递归执行，继续渲染 loading
