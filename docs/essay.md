@@ -130,7 +130,7 @@ $listeners:组件上所有绑定的事件
 组件更新时会复用实例，并调用 updateChildComponent 方法，传入 props,插槽，事件进行比较（prepatch 方法）
 
 之后，组件会：
-_ 执行 toggleObserving(false),将响应式暂时切换为 false（props 已经是响应式了，无需再次转化，防止重复响应式处理）
+_ 执行 toggleObserving(false),如果不是根组件，那么将可观测性暂时切换为 false，不再对其进行观测（props 已经被观测且是响应式了，防止重复响应式处理）
 _ 更新属性，拿到新的 props 后用 validate 进行验证（类型和合法性，是否有对应的属性）
 _ 更新 listners 和 attrs
 _ 组件更新后会重新给 props 赋值，赋值完成后触发 watcher 更新（由于直接是父组件的响应式数据，因此父组件数据更新后子组件会同步更新）
@@ -145,3 +145,23 @@ vue 中的异步组件，主要用作比较大的组件进行异步加载。原�
 解析异步组件时，会调用 resolveAsyncComonpent 方法并传入 asyncFactory 和 Vue,如果解析完返回值是 undefined，那么会创建一个异步组件的占位符（vnode）进行渲染，同时，组件的内部会组装出 Promise 的 resolve 和 reject 方法并向参数中的 Promise 中传入执行，如果返回值是 promise,就会调用 promsie.then，默认渲染 loading,如果状态为 resolve（更改 sync 状态）就渲染重新执行解析方法并生成虚拟节点
 
 组件重新渲染后，factory 上的 resolved/error 已经被挂载实例，就会直接渲染，否则如果返回的依旧是 promise 的话，会递归执行，继续渲染 loading
+
+函数式组件的好处：没有 watcher，性能更好。直接调用 render 创建 vnode,没有事件，data，生命周期等。更适合来做纯渲染的组件
+
+由 prop 定义的属性才叫 prop，其余的属性会被收集在$attrs,生成组件实例时，会在组件的虚拟节点上增加componentOptions.propsData属性，最终这个属性会在实例化（虚拟dom转真实dom）时被挂载到vm.$options.propsData，最后在初始化（initProps）时挂载到 vm.\_props 上
+
+初始化 prop 的过程中会将\_props 用 defineReactive 定义成响应式的，且会将 vm.\_props 的值代理到 vm 上(这里定义成响应式是保证修改 props 会更新视图，与 prop 传入时不会被重新观测不冲突)
+
+组件更新会调用子组件的 prepatch,子组件就会对收到的 props 进行更新（修改 vm.\_props 触发响应式，data 更新同理）
+
+总而言之，父组件中绑定的值是根据父组件的 data 进行响应式的，而在子组件中，prop 是重新定义的子组件内部的响应式，这两者是通过重新赋值（组件的 DataProp 和 vm.\_props 之间的转化）进行关联的，第一次渲染时\_props 会被定义响应式，之后每次父组件的属性变更，子组件的\_props 会被重新赋值而触发响应式
+
+data 和 props 或 methods 重名时，会在初始化 data 时进行校验并抛出警告，但 props 的优先级更高
+
+ref:可以获取真实节点或组件实例，虚拟 dom 无法拿到实例和组件，因此不会对 ref 做处理
+
+ref 是在创建真实节点（patch 方法）时进行处理的
+
+虚拟 dom 与平台无关，在创建真实 dom 前会走 createPatchFunction 的方法，将平台的节点操作和属性（包括 ref，指令，事件，样式的实现）操作方法传入来创建 patch 方法（相当于提供适配各个平台的接口），在创建节点时会执行创建节点的所有方法
+
+ref 会通过判断当前节点是否为组件来返回组件实例或 dom（Elm）,之后会获取 vm 上的$ref 对象，通过判断 ref 是否在 v-for 循环中来决定是否将结果包装成数组
