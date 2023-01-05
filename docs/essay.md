@@ -158,6 +158,16 @@ vue 中的异步组件，主要用作比较大的组件进行异步加载。原�
 
 data 和 props 或 methods 重名时，会在初始化 data 时进行校验并抛出警告，但 props 的优先级更高
 
+事件的实现：
+
+vue 可以类似于 react 那样，通过 props 传递函数进行数据传递，但要将函数写在 data 中去防止绑定 this
+
+如果使用自定义事件进行传参。那么就是基于发布订阅模式进行通信，使用@事件的写法，在模板编译时会被转译为 on：{事件：function}的模式，在子组件中可以通过$emit 触发对应的函数，如果希望原生事件触发，则可以通过.native 修饰符对事件进行修饰，编译时会编译出 nativeOn 事件
+
+在之后的处理过程（编译 Vnode）中，data.on 会被放在 listener 上，而 nativeOn 会被真正挂载在 on 上，在初始化组件的过程中，listener 上的事件会通过中介 opts。\_parentListeners，被放入 updateListeners 中更新或初始化事件，这个过程也就是发布订阅模式添加和更新的过程（利用$on,$off,$emit 维护 vm.\_event 这个事件发布订阅中心）
+
+methods:methods 在处理事件时会绑定当前组件实例的 this
+
 ref:可以获取真实节点或组件实例，虚拟 dom 无法拿到实例和组件，因此不会对 ref 做处理
 
 ref 是在创建真实节点（patch 方法）时进行处理的
