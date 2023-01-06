@@ -1,8 +1,13 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Vuex = factory());
-})(this, (function () { 'use strict';
+  typeof exports === "object" && typeof module !== "undefined"
+    ? (module.exports = factory())
+    : typeof define === "function" && define.amd
+    ? define(factory)
+    : ((global =
+        typeof globalThis !== "undefined" ? globalThis : global || self),
+      (global.Vuex = factory()));
+})(this, function () {
+  "use strict";
 
   let _Vue = null;
   class Vuex {
@@ -16,25 +21,25 @@
       this.state = _Vue.observable(state); // getter的实现
 
       this.getters = Object.create(null);
-      Object.keys(getters).forEach(key => {
+      Object.keys(getters).forEach((key) => {
         Object.defineProperty(this.getters, key, {
           get: () => {
             return getters[key].call(this, this.state);
-          }
+          },
         });
       }); // mutations
 
       this.mutations = Object.create(null);
-      Object.keys(mutations).forEach(key => {
-        this.mutations[key] = params => {
+      Object.keys(mutations).forEach((key) => {
+        this.mutations[key] = (params) => {
           // 改变this指向 ，默认是要传入 state
           mutations[key].call(this, this.state, params);
         };
       }); //action
 
       this.actions = Object.create(null);
-      Object.keys(actions).forEach(key => {
-        this.actions[key] = params => {
+      Object.keys(actions).forEach((key) => {
+        this.actions[key] = (params) => {
           // 改变this指向 ，默认是要传入 store也就是 this
           actions[key].call(this, this, params);
         };
@@ -48,7 +53,6 @@
         this.actions[eventName](params);
       };
     }
-
   }
 
   Vuex.install = function (Vue) {
@@ -59,12 +63,10 @@
         if (this.$options.store) {
           _Vue.prototype.$store = this.$options.store;
         }
-      }
-
+      },
     });
   };
 
   return Vuex;
-
-}));
+});
 //# sourceMappingURL=vuex.js.map
