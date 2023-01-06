@@ -1,4 +1,4 @@
-import { install, Vue } from "./src/install";
+import { install, Vue } from "./install";
 function createRouteMap(routes) {
   let pathMap = {};
   routes.forEach((route) => {

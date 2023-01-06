@@ -4,38 +4,27 @@ const plugins = [
     exclude: ["node_modules/*", "Vue2.6/*"],
   }),
 ];
-export default [
-  {
-    input: "./mine-Vue/src/index.js",
+const outputList = ["Vue", "VueRouter", "Vuex"];
+const buildList = outputList.map((name) => {
+  function getGlobals() {
+    const listReg = /(VueRouter)/;
+    return listReg.test(name)
+      ? {
+          vue: "vue", // 指明 global.vue 即是外部依赖 vue
+        }
+      : void 0;
+  }
+  return {
+    input: `./mine-${name}/src/index.js`,
     output: {
-      file: "./mine-Vue/lib/vue.js",
-      name: "Vue",
+      file: `./mine-${name}/lib/vue.js`,
+      name,
       format: "umd",
       sourcemap: true,
     },
+    globals: getGlobals(),
     plugins,
-  },
-  {
-    input: "./mine-VueRouter/index.js",
-    output: {
-      file: "./mine-VueRouter/lib/vue-router.js",
-      name: "VueRouter",
-      format: "umd",
-      sourcemap: true,
-      globals: {
-        vue: "vue", // 指明 global.vue 即是外部依赖 vue
-      },
-    },
-    plugins,
-  },
-  {
-    input: "./mine-Vuex/src/index.js",
-    output: {
-      file: "./mine-Vuex/lib/vuex.js",
-      name: "Vuex",
-      format: "umd",
-      sourcemap: true,
-    },
-    plugins,
-  },
-];
+  };
+});
+console.log(buildList);
+export default buildList;
