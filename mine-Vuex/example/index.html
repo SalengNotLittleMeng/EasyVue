@@ -20,10 +20,10 @@
     </div>
   </body>
   <script src="https://cdn.jsdelivr.net/npm/vue@2.6.0/dist/vue.js"></script>
-  <script src="./src/index.js"></script>
+  <script src="../dist/vuex.js"></script>
   <script>
-    Vue.use(Store);
-    let store = new Store({
+    Vue.use(Vuex);
+    let store = new Vuex({
       state: {
         name: "张三",
         age: 21,
@@ -51,7 +51,7 @@
     });
     let vm = new Vue({
       el: "#app",
-      store: store,
+      store,
       mounted() {},
     });
   </script>

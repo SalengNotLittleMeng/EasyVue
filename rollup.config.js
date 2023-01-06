@@ -28,4 +28,14 @@ export default [
     },
     plugins,
   },
+  {
+    input: "./mine-Vuex/src/index.js",
+    output: {
+      file: "./mine-Vuex/dist/vuex.js",
+      name: "Vuex",
+      format: "umd",
+      sourcemap: true,
+    },
+    plugins,
+  },
 ];

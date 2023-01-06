@@ -1,5 +1,5 @@
 let _Vue = null;
-class Store {
+export default class Vuex {
   constructor(options) {
     const state = options.state || {};
     const mutations = options.mutations || {};
@@ -43,7 +43,7 @@ class Store {
   }
 }
 
-Store.install = function (Vue) {
+Vuex.install = function (Vue) {
   _Vue = Vue;
   _Vue.mixin({
     beforeCreate() {
@@ -52,8 +52,4 @@ Store.install = function (Vue) {
       }
     },
   });
-};
-export default {
-  install,
-  Store,
 };
