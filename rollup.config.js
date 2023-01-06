@@ -8,7 +8,7 @@ export default [
   {
     input: "./mine-Vue/src/index.js",
     output: {
-      file: "./mine-Vue/dist/vue.js",
+      file: "./mine-Vue/lib/vue.js",
       name: "Vue",
       format: "umd",
       sourcemap: true,
@@ -18,7 +18,7 @@ export default [
   {
     input: "./mine-VueRouter/index.js",
     output: {
-      file: "./mine-VueRouter/dist/vue-router.js",
+      file: "./mine-VueRouter/lib/vue-router.js",
       name: "VueRouter",
       format: "umd",
       sourcemap: true,
@@ -31,7 +31,7 @@ export default [
   {
     input: "./mine-Vuex/src/index.js",
     output: {
-      file: "./mine-Vuex/dist/vuex.js",
+      file: "./mine-Vuex/lib/vuex.js",
       name: "Vuex",
       format: "umd",
       sourcemap: true,
