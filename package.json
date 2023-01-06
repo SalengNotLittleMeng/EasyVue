@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^16.2.1",
+    "@vue/babel-plugin-jsx": "^1.1.1",
     "commitizen": "^4.2.4",
     "commitlint": "^16.2.3",
     "cz-conventional-changelog": "^3.3.0",

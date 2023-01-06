@@ -22,6 +22,9 @@ export default [
       name: "VueRouter",
       format: "umd",
       sourcemap: true,
+      globals: {
+        vue: "vue", // 指明 global.vue 即是外部依赖 vue
+      },
     },
     plugins,
   },
