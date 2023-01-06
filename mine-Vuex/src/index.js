@@ -53,7 +53,7 @@ Store.install = function (Vue) {
     },
   });
 };
-// export default {
-//     install,
-//     Store
-// }
+export default {
+  install,
+  Store,
+};

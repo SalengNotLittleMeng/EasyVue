@@ -1,15 +1,28 @@
 import babel from "rollup-plugin-babel";
-export default {
-  input: "./min-vue/src/index.js",
-  output: {
-    file: "./min-vue/dist/vue.js",
-    name: "Vue",
-    format: "umd",
-    sourcemap: true,
+const plugins = [
+  babel({
+    exclude: ["node_modules/*", "Vue2.6/*"],
+  }),
+];
+export default [
+  {
+    input: "./mine-Vue/src/index.js",
+    output: {
+      file: "./mine-Vue/dist/vue.js",
+      name: "Vue",
+      format: "umd",
+      sourcemap: true,
+    },
+    plugins,
   },
-  plugins: [
-    babel({
-      exclude: ["node_modules/*", "Vue2.6/*"],
-    }),
-  ],
-};
+  {
+    input: "./mine-VueRouter/index.js",
+    output: {
+      file: "./mine-VueRouter/dist/vue-router.js",
+      name: "VueRouter",
+      format: "umd",
+      sourcemap: true,
+    },
+    plugins,
+  },
+];
