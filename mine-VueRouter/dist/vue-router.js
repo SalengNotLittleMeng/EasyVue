@@ -39,8 +39,7 @@
     Vue = _Vue;
     Vue.mixin({
       beforeCreate: function beforeCreate() {
-        console.log(this); // 这里不用原型继承的原因是因为会导致所有的Vue类共享路由
-
+        // 这里不用原型继承的原因是因为会导致所有的Vue类共享路由
         if (this.$options.router) {
           // 根实例上传递了router
           this._routerRoot = this;
@@ -63,15 +62,37 @@
       },
     });
     Vue.component("router-link", {
-      render: function render() {
-        return vue.createVNode("a", null, [this.$slots["default"]]);
+      render: function render(h) {
+        return h(
+          "a",
+          {
+            class: "foo",
+          },
+          [this.$slots["default"]]
+        );
       },
     });
     Vue.component("router-view", {
-      render: function render() {
-        return vue.createVNode("div", null, null);
+      render: function render(h) {
+        return vue.createVNode("div", null, [vue.createTextVNode("hello")]);
       },
     });
+  }
+
+  function createMatcher(routes) {
+    function addRoute() {}
+
+    function addRoutes() {}
+
+    function match() {}
+
+    return {
+      addRoutes: addRoutes,
+      //添加多个路由
+      addRoute: addRoute,
+      //添加一个路由
+      match: match, //给一个路径来返回路由
+    };
   }
 
   var VueRouter = /*#__PURE__*/ _createClass(function VueRouter(options) {
@@ -79,6 +100,7 @@
 
     // 对用户传入的路由表进行映射
     options.routes;
+    this.matcher = createMatcher();
   });
 
   VueRouter.install = install;

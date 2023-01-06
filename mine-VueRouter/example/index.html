@@ -8,7 +8,10 @@
   </head>
   <body>
     <div>hello world</div>
-    <div id="app"></div>
+    <div id="app">
+      <router-link><foo></foo></router-link>
+      <router-link><boo></boo></router-link>
+    </div>
   </body>
   <script
     type="text/javascript"
@@ -19,6 +22,14 @@
     Vue.use(VueRouter);
     const app = new Vue({
       el: "#app",
+      components: {
+        foo: {
+          template: "<div>hello foo</div>",
+        },
+        boo: {
+          template: "<div>hello boo</div>",
+        },
+      },
     });
   </script>
 </html>

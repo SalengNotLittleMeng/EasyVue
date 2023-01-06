@@ -3,7 +3,6 @@ export function install(_Vue) {
   Vue = _Vue;
   Vue.mixin({
     beforeCreate() {
-      console.log(this);
       // 这里不用原型继承的原因是因为会导致所有的Vue类共享路由
       if (this.$options.router) {
         // 根实例上传递了router
@@ -22,13 +21,13 @@ export function install(_Vue) {
     },
   });
   Vue.component("router-link", {
-    render() {
-      return <a>{this.$slots.default}</a>;
+    render(h) {
+      return h("a", { class: "foo" }, [this.$slots.default]);
     },
   });
   Vue.component("router-view", {
-    render() {
-      return <div></div>;
+    render(h) {
+      return <div>hello</div>;
     },
   });
 }
