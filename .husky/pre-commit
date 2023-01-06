@@ -1,6 +1,6 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
-
+# 在提交前格式化项目
 npx prettier --write .
 
 git add .
