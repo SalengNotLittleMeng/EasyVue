@@ -8,7 +8,6 @@ function Vue(options) {
   this._init(options);
 }
 // 扩展了init方法
-
 initMixin(Vue);
 // 提供了_update()和_render两个方法
 initLifeCycle(Vue);

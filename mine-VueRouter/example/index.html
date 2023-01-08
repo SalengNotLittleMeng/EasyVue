@@ -9,8 +9,8 @@
   <body>
     <div>hello world</div>
     <div id="app">
-      <router-link><foo></foo></router-link>
-      <router-link><boo></boo></router-link>
+      <router-link><Foo></Foo></router-link>
+      <router-link><Boo></Boo></router-link>
     </div>
   </body>
   <script
@@ -19,16 +19,40 @@
   ></script>
   <script type="text/javascript" src="../lib/vue-router.js"></script>
   <script>
+    const Foo = {
+      template: "<div>hello foo</div>",
+    };
+    const Boo = {
+      template: "<div>hello boo</div>",
+    };
+    const routes = [
+      {
+        path: "/",
+        name: "Foo",
+        component: Foo,
+        // children:[
+        //     {
+        //         path:'boo',
+        //         component:Boo
+        //     }
+        // ]
+      },
+      {
+        path: "/boo",
+        name: "Boo",
+        component: Boo,
+      },
+    ];
     Vue.use(VueRouter);
     const app = new Vue({
       el: "#app",
+      router: routes,
       components: {
-        foo: {
-          template: "<div>hello foo</div>",
-        },
-        boo: {
-          template: "<div>hello boo</div>",
-        },
+        Foo,
+        Boo,
+      },
+      mounted() {
+        console.log(this.$router);
       },
     });
   </script>

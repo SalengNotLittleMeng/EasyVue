@@ -7,7 +7,7 @@ export function install(_Vue) {
       if (this.$options.router) {
         // 根实例上传递了router
         this._routerRoot = this;
-        this._router = this.$options.router;
+        this._router = this.$options.router || [];
       } else {
         // 所有组件上都增加一个routerRoot的指针指向根实例
         this._routerRoot = this.$parent?._router;

@@ -43,7 +43,7 @@
         if (this.$options.router) {
           // 根实例上传递了router
           this._routerRoot = this;
-          this._router = this.$options.router;
+          this._router = this.$options.router || [];
         } else {
           var _this$$parent;
 

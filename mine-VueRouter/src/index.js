@@ -4,9 +4,12 @@ function createRouteMap(routes) {
   routes.forEach((route) => {
     addRouteRecord(route, pathMap);
   });
+  console.log(pathMap);
 }
-function addRouteRecord(route, pathMap) {
-  let path = route.path;
+function addRouteRecord(route, pathMap, parentRecord) {
+  let path = parentRecord
+    ? `${parentRecord.path == "/" ? "" : "/"}${route.path}`
+    : route.path;
   if (!pathMap[path]) {
     pathMap[path] = {
       path,
