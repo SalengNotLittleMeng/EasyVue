@@ -1,10 +1,14 @@
 import babel from "rollup-plugin-babel";
+import nodeResolve from "rollup-plugin-node-resolve";
+import commonjs from "rollup-plugin-commonjs";
 const plugins = [
+  nodeResolve(),
+  commonjs(),
   babel({
     exclude: ["node_modules/*", "Vue2.6/*"],
   }),
 ];
-const outputList = ["Vue", "VueRouter", "Vuex"];
+const outputList = ["Vue", "VueRouter"];
 const buildList = outputList.map((name) => {
   function getGlobals() {
     const listReg = /(VueRouter)/;
@@ -21,10 +25,9 @@ const buildList = outputList.map((name) => {
       name,
       format: "umd",
       sourcemap: true,
+      globals: getGlobals(),
     },
-    globals: getGlobals(),
     plugins,
   };
 });
-console.log(buildList);
 export default buildList;

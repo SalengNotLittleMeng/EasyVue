@@ -43,10 +43,15 @@
         component: Boo,
       },
     ];
-    Vue.use(VueRouter);
+    debugger;
+    const router = new VueRouter({
+      routes,
+    });
+    console.log(router);
+    Vue.use(router);
     const app = new Vue({
       el: "#app",
-      router: routes,
+      router,
       components: {
         Foo,
         Boo,

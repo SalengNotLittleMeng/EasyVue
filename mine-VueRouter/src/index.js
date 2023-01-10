@@ -4,6 +4,8 @@ import History from "./history/history";
 import Hash from "./history/hash";
 class VueRouter {
   constructor(options) {
+    console.log("111");
+    this.install = install;
     // 对用户传入的路由表进行映射
     const routes = options.routes;
     this.matcher = createMatcher(routes);
@@ -16,5 +18,4 @@ class VueRouter {
     }
   }
 }
-VueRouter.install = install;
 export default VueRouter;

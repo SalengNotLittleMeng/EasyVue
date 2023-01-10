@@ -21,7 +21,9 @@
     "commitlint": "^16.2.3",
     "cz-conventional-changelog": "^3.3.0",
     "husky": "^7.0.4",
-    "prettier": "^2.6.0"
+    "prettier": "^2.6.0",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0"
   },
   "config": {
     "commitizen": {

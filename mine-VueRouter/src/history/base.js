@@ -1,1 +1,3 @@
-export default class Base {}
+export default class Base {
+  constructor(router) {}
+}
