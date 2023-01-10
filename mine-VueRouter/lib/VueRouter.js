@@ -204,9 +204,10 @@
       };
     }
 
-    route.children.forEach(function (children) {
-      addRouteRecord(children, pathMap);
-    });
+    route.children &&
+      route.children.forEach(function (children) {
+        addRouteRecord(children, pathMap);
+      });
   }
 
   function createMatcher(routes) {
@@ -276,15 +277,21 @@
 
       ensureSlash();
       return _this;
-    }
+    } // 之后需要调用此方法，监控hash值的变化
 
-    return _createClass(Hash);
+    _createClass(Hash, [
+      {
+        key: "setupListener",
+        value: function setupListener() {},
+      },
+    ]);
+
+    return Hash;
   })(Base);
 
   var VueRouter = /*#__PURE__*/ _createClass(function VueRouter(options) {
     _classCallCheck(this, VueRouter);
 
-    console.log("111");
     this.install = install; // 对用户传入的路由表进行映射
 
     var routes = options.routes;
@@ -301,4 +308,4 @@
 
   return VueRouter;
 });
-//# sourceMappingURL=vue.js.map
+//# sourceMappingURL=VueRouter.js.map

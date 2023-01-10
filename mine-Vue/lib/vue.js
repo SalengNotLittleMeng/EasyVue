@@ -1459,4 +1459,4 @@
 
   return Vue;
 });
-//# sourceMappingURL=vue.js.map
+//# sourceMappingURL=Vue.js.map

@@ -21,7 +21,7 @@ const buildList = outputList.map((name) => {
   return {
     input: `./mine-${name}/src/index.js`,
     output: {
-      file: `./mine-${name}/lib/vue.js`,
+      file: `./mine-${name}/lib/${name}.js`,
       name,
       format: "umd",
       sourcemap: true,

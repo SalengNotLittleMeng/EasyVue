@@ -17,7 +17,7 @@
     type="text/javascript"
     src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"
   ></script>
-  <script type="text/javascript" src="../lib/vue-router.js"></script>
+  <script type="text/javascript" src="../lib/VueRouter.js"></script>
   <script>
     const Foo = {
       template: "<div>hello foo</div>",
@@ -43,11 +43,9 @@
         component: Boo,
       },
     ];
-    debugger;
     const router = new VueRouter({
       routes,
     });
-    console.log(router);
     Vue.use(router);
     const app = new Vue({
       el: "#app",

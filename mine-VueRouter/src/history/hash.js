@@ -12,5 +12,7 @@ class Hash extends Base {
     // 初始化哈希路由的时候要给定默认的哈希路径
     ensureSlash();
   }
+  // 之后需要调用此方法，监控hash值的变化
+  setupListener() {}
 }
 export default Hash;

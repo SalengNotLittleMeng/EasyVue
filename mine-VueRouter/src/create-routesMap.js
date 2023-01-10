@@ -19,7 +19,8 @@ function addRouteRecord(route, pathMap, parentRecord) {
       meta: route.meta,
     };
   }
-  route.children.forEach((children) => {
-    addRouteRecord(children, pathMap);
-  });
+  route.children &&
+    route.children.forEach((children) => {
+      addRouteRecord(children, pathMap);
+    });
 }
