@@ -137,6 +137,8 @@
           // 根实例上传递了router
           this._routerRoot = this;
           this._router = this.$options.router || {};
+
+          this._router.init(this); //this就是我们整个的应用(new Vue)
         } else {
           var _this$$parent;
 
@@ -151,15 +153,36 @@
 
     Object.defineProperty(Vue.prototype, "$router", {
       get: function get() {
-        return this._routerRoot._router;
+        return this._routerRoot;
       },
     });
     Vue.component("router-link", {
+      props: {
+        to: {
+          type: String,
+        },
+        tag: {
+          type: String,
+          default: "a",
+        },
+      },
+      methods: {
+        handler: function handler() {
+          this.$router.push(this.to);
+        },
+      },
       render: function render(h) {
+        var _this = this;
+
+        var tag = this.tag;
         return h(
-          "a",
+          tag,
           {
-            class: "foo",
+            on: {
+              click: function click() {
+                _this.handler();
+              },
+            },
           },
           [this.$slots["default"]]
         );
@@ -236,9 +259,28 @@
     };
   }
 
-  var Base = /*#__PURE__*/ _createClass(function Base(router) {
-    _classCallCheck(this, Base);
-  });
+  var Base = /*#__PURE__*/ (function () {
+    function Base(router) {
+      _classCallCheck(this, Base);
+
+      this.router = router;
+    } // 所有跳转的逻辑都要放在transitionTo中来实现
+
+    _createClass(Base, [
+      {
+        key: "transitionTo",
+        value: function transitionTo(location, listener) {
+          // 用之前的匹配方法
+          var record = this.router.match(location);
+          console.log(record); // 当路由切换的时候，也应该调用transitionTo拿到新的记录
+
+          listener && listener();
+        },
+      },
+    ]);
+
+    return Base;
+  })();
 
   var History = /*#__PURE__*/ (function (_Base) {
     _inherits(History, _Base);
@@ -251,7 +293,24 @@
       return _super.call(this, router);
     }
 
-    return _createClass(History);
+    _createClass(History, [
+      {
+        key: "setupListener",
+        value: function setupListener() {
+          window.addEventListener("popstate", function () {
+            console.log(this.window.location.pathname);
+          });
+        },
+      },
+      {
+        key: "getCurrentLocation",
+        value: function getCurrentLocation() {
+          return window.location.pathname;
+        },
+      },
+    ]);
+
+    return History;
   })(Base);
 
   function ensureSlash() {
@@ -260,6 +319,11 @@
     }
 
     window.location.hash = "/";
+  }
+
+  function getHash() {
+    // 截取，获取真正的hash值
+    return window.location.hash.slice(1);
   }
 
   var Hash = /*#__PURE__*/ (function (_Base) {
@@ -272,8 +336,7 @@
 
       _classCallCheck(this, Hash);
 
-      _this = _super.call(this, router);
-      console.log("hello"); // 初始化哈希路由的时候要给定默认的哈希路径
+      _this = _super.call(this, router); // 初始化哈希路由的时候要给定默认的哈希路径
 
       ensureSlash();
       return _this;
@@ -282,29 +345,68 @@
     _createClass(Hash, [
       {
         key: "setupListener",
-        value: function setupListener() {},
+        value: function setupListener() {
+          window.addEventListener("hashchange", function () {
+            console.log(getHash());
+          });
+        },
+      },
+      {
+        key: "getCurrentLocation",
+        value: function getCurrentLocation() {
+          return getHash();
+        },
       },
     ]);
 
     return Hash;
   })(Base);
 
-  var VueRouter = /*#__PURE__*/ _createClass(function VueRouter(options) {
-    _classCallCheck(this, VueRouter);
+  var VueRouter = /*#__PURE__*/ (function () {
+    function VueRouter(options) {
+      _classCallCheck(this, VueRouter);
 
-    this.install = install; // 对用户传入的路由表进行映射
+      this.install = install; // 对用户传入的路由表进行映射
 
-    var routes = options.routes;
-    this.matcher = createMatcher(routes); // 根据不用的模式创建不同的路由系统
+      var routes = options.routes;
+      this.matcher = createMatcher(routes); // 根据不用的模式创建不同的路由系统
 
-    var mode = options.mode || "hash";
+      var mode = options.mode || "hash";
 
-    if (mode == "hash") {
-      this.history = new Hash();
-    } else if (mode == "history") {
-      this.history = new History();
+      if (mode == "hash") {
+        this.history = new Hash(this);
+      } else if (mode == "history") {
+        this.history = new History(this);
+      }
     }
-  });
+
+    _createClass(VueRouter, [
+      {
+        key: "match",
+        value: function match(path) {
+          return this.matcher.match(path);
+        },
+      },
+      {
+        key: "push",
+        value: function push(location) {
+          this.history.transitionTo(location);
+        },
+      },
+      {
+        key: "init",
+        value: function init(app) {
+          var history = this.history; // 根据路径变化，匹配不同的组件进行渲染，路径变化，更新视图，路径需要是响应式的
+
+          history.transitionTo(history.getCurrentLocation(), function () {
+            history.setupListener(); //监听路由变化
+          });
+        },
+      },
+    ]);
+
+    return VueRouter;
+  })();
 
   return VueRouter;
 });
