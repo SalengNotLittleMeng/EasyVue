@@ -210,7 +210,7 @@
 
     Object.defineProperty(Vue.prototype, "$router", {
       get: function get() {
-        return this._routerRoot && this._routerRoot._router;
+        return this._routerRoot;
       },
     });
     Object.defineProperty(Vue.prototype, "$route", {
@@ -220,6 +220,7 @@
     }); // 内部修改的是current
 
     Vue.component("router-link", {
+      name: "router-link",
       props: {
         to: {
           type: String,

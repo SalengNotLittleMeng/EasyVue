@@ -20,7 +20,7 @@ export function install(_Vue) {
   // 劫持$router属性，取$router其实是取了根实例上的router
   Object.defineProperty(Vue.prototype, "$router", {
     get() {
-      return this._routerRoot && this._routerRoot._router;
+      return this._routerRoot;
     },
   });
   Object.defineProperty(Vue.prototype, "$route", {
@@ -30,6 +30,7 @@ export function install(_Vue) {
   });
   // 内部修改的是current
   Vue.component("router-link", {
+    name: "router-link",
     props: {
       to: { type: String },
       tag: { type: String, default: "a" },
