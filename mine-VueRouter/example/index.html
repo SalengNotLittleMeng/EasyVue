@@ -9,8 +9,7 @@
   <body>
     <div>hello world</div>
     <div id="app">
-      <router-link to="/boo"><Foo></Foo></router-link>
-      <router-link to="/"><Boo></Boo></router-link>
+      <router-view></router-view>
     </div>
   </body>
   <script
@@ -27,22 +26,33 @@
       name: "boo",
       template: "<div>hello boo</div>",
     };
+    const main = {
+      template: `<div>
+        <div><router-link to="/boo">foo</router-link></div>
+        <div><router-link to="/foo">boo</router-link> </div>
+        <router-view></router-view>
+    </div>`,
+      components: {
+        Foo,
+        Boo,
+      },
+    };
     const routes = [
       {
         path: "/",
-        name: "Foo",
-        component: Foo,
-        // children:[
-        //     {
-        //         path:'boo',
-        //         component:Boo
-        //     }
-        // ]
-      },
-      {
-        path: "/boo",
-        name: "Boo",
-        component: Boo,
+        name: "main",
+        component: main,
+        children: [
+          {
+            path: "/foo",
+            name: "Foo",
+            component: Foo,
+          },
+          {
+            path: "/boo",
+            component: Boo,
+          },
+        ],
       },
     ];
     const router = new VueRouter({

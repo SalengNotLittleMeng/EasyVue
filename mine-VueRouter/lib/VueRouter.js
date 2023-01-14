@@ -1,17 +1,24 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.VueRouter = factory());
-})(this, (function () { 'use strict';
+  typeof exports === "object" && typeof module !== "undefined"
+    ? (module.exports = factory())
+    : typeof define === "function" && define.amd
+    ? define(factory)
+    : ((global =
+        typeof globalThis !== "undefined" ? globalThis : global || self),
+      (global.VueRouter = factory()));
+})(this, function () {
+  "use strict";
 
   function ownKeys(object, enumerableOnly) {
     var keys = Object.keys(object);
 
     if (Object.getOwnPropertySymbols) {
       var symbols = Object.getOwnPropertySymbols(object);
-      enumerableOnly && (symbols = symbols.filter(function (sym) {
-        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-      })), keys.push.apply(keys, symbols);
+      enumerableOnly &&
+        (symbols = symbols.filter(function (sym) {
+          return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+        })),
+        keys.push.apply(keys, symbols);
     }
 
     return keys;
@@ -20,11 +27,22 @@
   function _objectSpread2(target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = null != arguments[i] ? arguments[i] : {};
-      i % 2 ? ownKeys(Object(source), !0).forEach(function (key) {
-        _defineProperty(target, key, source[key]);
-      }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
+      i % 2
+        ? ownKeys(Object(source), !0).forEach(function (key) {
+            _defineProperty(target, key, source[key]);
+          })
+        : Object.getOwnPropertyDescriptors
+        ? Object.defineProperties(
+            target,
+            Object.getOwnPropertyDescriptors(source)
+          )
+        : ownKeys(Object(source)).forEach(function (key) {
+            Object.defineProperty(
+              target,
+              key,
+              Object.getOwnPropertyDescriptor(source, key)
+            );
+          });
     }
 
     return target;
@@ -50,7 +68,7 @@
     if (protoProps) _defineProperties(Constructor.prototype, protoProps);
     if (staticProps) _defineProperties(Constructor, staticProps);
     Object.defineProperty(Constructor, "prototype", {
-      writable: false
+      writable: false,
     });
     return Constructor;
   }
@@ -61,7 +79,7 @@
         value: value,
         enumerable: true,
         configurable: true,
-        writable: true
+        writable: true,
       });
     } else {
       obj[key] = value;
@@ -79,27 +97,31 @@
       constructor: {
         value: subClass,
         writable: true,
-        configurable: true
-      }
+        configurable: true,
+      },
     });
     Object.defineProperty(subClass, "prototype", {
-      writable: false
+      writable: false,
     });
     if (superClass) _setPrototypeOf(subClass, superClass);
   }
 
   function _getPrototypeOf(o) {
-    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {
-      return o.__proto__ || Object.getPrototypeOf(o);
-    };
+    _getPrototypeOf = Object.setPrototypeOf
+      ? Object.getPrototypeOf.bind()
+      : function _getPrototypeOf(o) {
+          return o.__proto__ || Object.getPrototypeOf(o);
+        };
     return _getPrototypeOf(o);
   }
 
   function _setPrototypeOf(o, p) {
-    _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {
-      o.__proto__ = p;
-      return o;
-    };
+    _setPrototypeOf = Object.setPrototypeOf
+      ? Object.setPrototypeOf.bind()
+      : function _setPrototypeOf(o, p) {
+          o.__proto__ = p;
+          return o;
+        };
     return _setPrototypeOf(o, p);
   }
 
@@ -109,7 +131,9 @@
     if (typeof Proxy === "function") return true;
 
     try {
-      Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
+      Boolean.prototype.valueOf.call(
+        Reflect.construct(Boolean, [], function () {})
+      );
       return true;
     } catch (e) {
       return false;
@@ -118,7 +142,9 @@
 
   function _assertThisInitialized(self) {
     if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+      throw new ReferenceError(
+        "this hasn't been initialised - super() hasn't been called"
+      );
     }
 
     return self;
@@ -128,7 +154,9 @@
     if (call && (typeof call === "object" || typeof call === "function")) {
       return call;
     } else if (call !== void 0) {
-      throw new TypeError("Derived constructors may only return object or undefined");
+      throw new TypeError(
+        "Derived constructors may only return object or undefined"
+      );
     }
 
     return _assertThisInitialized(self);
@@ -139,7 +167,7 @@
 
     return function _createSuperInternal() {
       var Super = _getPrototypeOf(Derived),
-          result;
+        result;
 
       if (hasNativeReflectConstruct) {
         var NewTarget = _getPrototypeOf(this).constructor;
@@ -157,37 +185,64 @@
     name: "router-link",
     props: {
       to: {
-        type: String
+        type: String,
       },
       tag: {
         type: String,
-        "default": "a"
-      }
+        default: "a",
+      },
     },
     methods: {
       handler: function handler() {
         this.$router.push(this.to);
-      }
+      },
     },
     render: function render(h) {
       var _this = this;
 
       var tag = this.tag;
-      return h(tag, {
-        on: {
-          click: function click() {
-            _this.handler();
-          }
-        }
-      }, [this.$slots["default"]]);
-    }
+      return h(
+        tag,
+        {
+          on: {
+            click: function click() {
+              _this.handler();
+            },
+          },
+        },
+        [this.$slots["default"]]
+      );
+    },
   };
 
   var routerView = {
     name: "router-view",
-    // router-view 不会被计入父子关系，应该被标识为抽象（函数式）组件
+    // router-view 不会被计入父子关系，应该被标识为抽象（函数式）组件,避免创建父子关系（$parents，$children等）
     functional: true,
-    render: function render() {}
+    render: function render(h, _ref) {
+      var parent = _ref.parent,
+        data = _ref.data;
+      data.routerView = true;
+      console.log(parent.$route);
+      var route = parent.$route;
+      var depth = 0; // 找到当前渲染的是第几层
+
+      while (parent) {
+        if (parent.$vnode && parent.$vnode.data.routerView) {
+          depth++;
+        }
+
+        parent = parent.$parent;
+      }
+
+      var record = route.matched[depth];
+
+      if (!record) {
+        return h();
+      }
+
+      return h(record.component, data); // _vnode:渲染函数的虚拟节点；$vnode:代表组件本身，$vnode是_vnode的父亲
+    },
   };
 
   var Vue;
@@ -204,26 +259,28 @@
           this._router.init(this); //this就是我们整个的应用(new Vue)
           // 给根实例添加一个属性_router,就是当前的current对象
 
-
           Vue.util.defineReactive(this, "_route", this._router.history.current);
         } else {
           var _this$$parent;
 
           // 所有组件上都增加一个routerRoot的指针指向根实例
-          this._routerRoot = (_this$$parent = this.$parent) === null || _this$$parent === void 0 ? void 0 : _this$$parent._router;
+          this._routerRoot =
+            ((_this$$parent = this.$parent) === null || _this$$parent === void 0
+              ? void 0
+              : _this$$parent._router) || this.$parent._routerRoot;
         }
-      }
+      },
     }); // 劫持$router属性，取$router其实是取了根实例上的router
 
     Object.defineProperty(Vue.prototype, "$router", {
       get: function get() {
         return this._routerRoot;
-      }
+      },
     });
     Object.defineProperty(Vue.prototype, "$route", {
       get: function get() {
-        return this._routerRoot && this._routerRoot._route;
-      }
+        return this._routerRoot._route || this._routerRoot.history.current;
+      },
     }); // 内部修改的是current
 
     Vue.component("router-link", routerLink);
@@ -231,18 +288,21 @@
   }
 
   function createRouteMap(routes) {
-    var pathMap = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var pathMap =
+      arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     // 根据用户选项扁平化信息,将深度子类转化为扁平层级
     routes.forEach(function (route) {
       addRouteRecord(route, pathMap);
     });
     return {
-      pathMap: pathMap
+      pathMap: pathMap,
     };
   }
 
   function addRouteRecord(route, pathMap, parentRecord) {
-    var path = parentRecord ? "".concat(parentRecord.path == "/" ? "" : "/").concat(route.path) : route.path;
+    var path = parentRecord
+      ? "".concat(parentRecord.path == "/" ? "" : "/").concat(route.path)
+      : route.path;
 
     if (!pathMap[path]) {
       pathMap[path] = {
@@ -250,18 +310,19 @@
         component: route.component,
         props: route.props,
         meta: route.meta,
-        parent: parentRecord
+        parent: parentRecord,
       };
     }
 
-    route.children && route.children.forEach(function (children) {
-      addRouteRecord(children, pathMap);
-    });
+    route.children &&
+      route.children.forEach(function (children) {
+        addRouteRecord(children, pathMap);
+      });
   }
 
   function createMatcher(routes) {
     var _createRouteMap = createRouteMap(routes),
-        pathMap = _createRouteMap.pathMap;
+      pathMap = _createRouteMap.pathMap;
 
     function addRoutes(routes) {
       // 动态添加路由
@@ -281,8 +342,7 @@
       //添加多个路由
       addRoute: addRoute,
       //添加一个路由
-      match: match //给一个路径来返回路由
-
+      match: match, //给一个路径来返回路由
     };
   }
 
@@ -296,54 +356,63 @@
       }
     }
 
-    return _objectSpread2(_objectSpread2({}, location), {}, {
-      matched: matched
-    });
+    return _objectSpread2(
+      _objectSpread2({}, location),
+      {},
+      {
+        matched: matched,
+      }
+    );
   }
 
-  var Base = /*#__PURE__*/function () {
+  var Base = /*#__PURE__*/ (function () {
     function Base(router) {
       _classCallCheck(this, Base);
 
       this.router = router; // 每次更新的是current，每次current变化，我们就可以切换页面
 
       this.current = createRoute(null, {
-        path: "/"
+        path: "/",
       });
     } // 所有跳转的逻辑都要放在transitionTo中来实现
 
+    _createClass(Base, [
+      {
+        key: "transitionTo",
+        value: function transitionTo(location, listener) {
+          // 用之前的匹配方法
+          var record = this.router.match(location);
+          var route = createRoute(record, {
+            path: location,
+          }); // 这里需要取消点击进入和路由变化中的两次重复变化，注意path='/'时可能会匹配组件
 
-    _createClass(Base, [{
-      key: "transitionTo",
-      value: function transitionTo(location, listener) {
-        // 用之前的匹配方法
-        var record = this.router.match(location);
-        var route = createRoute(record, {
-          path: location
-        }); // 这里需要取消点击进入和路由变化中的两次重复变化，注意path='/'时可能会匹配组件
+          if (
+            location == this.current.path &&
+            route.matched.length == this.current.matched.length
+          ) {
+            return;
+          }
 
-        if (location == this.current.path && route.matched.length == this.current.matched.length) {
-          return;
-        }
+          this.current = route; // path:'/',matched:[]
+          // 当路由切换的时候，也应该调用transitionTo拿到新的记录
 
-        this.current = route; // path:'/',matched:[]
-        // 当路由切换的时候，也应该调用transitionTo拿到新的记录
-
-        listener && listener();
-        this.cb && this.cb(route);
-      }
-    }, {
-      key: "listen",
-      value: function listen(cb) {
-        // 用户自定义的钩子 this._route=route
-        this.cb = cb;
-      }
-    }]);
+          listener && listener();
+          this.cb && this.cb(route);
+        },
+      },
+      {
+        key: "listen",
+        value: function listen(cb) {
+          // 用户自定义的钩子 this._route=route
+          this.cb = cb;
+        },
+      },
+    ]);
 
     return Base;
-  }();
+  })();
 
-  var History = /*#__PURE__*/function (_Base) {
+  var History = /*#__PURE__*/ (function (_Base) {
     _inherits(History, _Base);
 
     var _super = _createSuper(History);
@@ -354,22 +423,25 @@
       return _super.call(this, router);
     }
 
-    _createClass(History, [{
-      key: "setupListener",
-      value: function setupListener() {
-        window.addEventListener("popstate", function () {
-          console.log(this.window.location.pathname);
-        });
-      }
-    }, {
-      key: "getCurrentLocation",
-      value: function getCurrentLocation() {
-        return window.location.pathname;
-      }
-    }]);
+    _createClass(History, [
+      {
+        key: "setupListener",
+        value: function setupListener() {
+          window.addEventListener("popstate", function () {
+            console.log(this.window.location.pathname);
+          });
+        },
+      },
+      {
+        key: "getCurrentLocation",
+        value: function getCurrentLocation() {
+          return window.location.pathname;
+        },
+      },
+    ]);
 
     return History;
-  }(Base);
+  })(Base);
 
   function ensureSlash() {
     if (window.location.hash) {
@@ -384,7 +456,7 @@
     return window.location.hash.slice(1);
   }
 
-  var Hash = /*#__PURE__*/function (_Base) {
+  var Hash = /*#__PURE__*/ (function (_Base) {
     _inherits(Hash, _Base);
 
     var _super = _createSuper(Hash);
@@ -400,28 +472,30 @@
       return _this;
     } // 之后需要调用此方法，监控hash值的变化
 
+    _createClass(Hash, [
+      {
+        key: "setupListener",
+        value: function setupListener() {
+          var _this2 = this;
 
-    _createClass(Hash, [{
-      key: "setupListener",
-      value: function setupListener() {
-        var _this2 = this;
-
-        // 这里会监听哈希的变化，通过修改url或回退也会触发
-        window.addEventListener("hashchange", function () {
-          _this2.transitionTo(getHash());
-        });
-      }
-    }, {
-      key: "getCurrentLocation",
-      value: function getCurrentLocation() {
-        return getHash();
-      }
-    }]);
+          // 这里会监听哈希的变化，通过修改url或回退也会触发
+          window.addEventListener("hashchange", function () {
+            _this2.transitionTo(getHash());
+          });
+        },
+      },
+      {
+        key: "getCurrentLocation",
+        value: function getCurrentLocation() {
+          return getHash();
+        },
+      },
+    ]);
 
     return Hash;
-  }(Base);
+  })(Base);
 
-  var VueRouter = /*#__PURE__*/function () {
+  var VueRouter = /*#__PURE__*/ (function () {
     function VueRouter(options) {
       _classCallCheck(this, VueRouter);
 
@@ -439,37 +513,40 @@
       }
     }
 
-    _createClass(VueRouter, [{
-      key: "match",
-      value: function match(path) {
-        return this.matcher.match(path);
-      }
-    }, {
-      key: "push",
-      value: function push(location) {
-        this.history.transitionTo(location, function () {
-          window.location.hash = location;
-        });
-      }
-    }, {
-      key: "init",
-      value: function init(app) {
-        var history = this.history; // 根据路径变化，匹配不同的组件进行渲染，路径变化，更新视图，路径需要是响应式的
+    _createClass(VueRouter, [
+      {
+        key: "match",
+        value: function match(path) {
+          return this.matcher.match(path);
+        },
+      },
+      {
+        key: "push",
+        value: function push(location) {
+          this.history.transitionTo(location, function () {
+            window.location.hash = location;
+          });
+        },
+      },
+      {
+        key: "init",
+        value: function init(app) {
+          var history = this.history; // 根据路径变化，匹配不同的组件进行渲染，路径变化，更新视图，路径需要是响应式的
 
-        history.transitionTo(history.getCurrentLocation(), function () {
-          history.setupListener(); //监听路由变化
-        }); // 每次路由需要调用listen中的方法实现更新_route的值，使他能够发生变化，重新渲染视图
+          history.transitionTo(history.getCurrentLocation(), function () {
+            history.setupListener(); //监听路由变化
+          }); // 每次路由需要调用listen中的方法实现更新_route的值，使他能够发生变化，重新渲染视图
 
-        history.listen(function (newRoute) {
-          app._route = newRoute;
-        });
-      }
-    }]);
+          history.listen(function (newRoute) {
+            app._route = newRoute;
+          });
+        },
+      },
+    ]);
 
     return VueRouter;
-  }();
+  })();
 
   return VueRouter;
-
-}));
+});
 //# sourceMappingURL=VueRouter.js.map

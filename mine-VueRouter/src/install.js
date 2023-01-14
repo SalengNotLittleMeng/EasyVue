@@ -15,7 +15,7 @@ export function install(_Vue) {
         Vue.util.defineReactive(this, "_route", this._router.history.current);
       } else {
         // 所有组件上都增加一个routerRoot的指针指向根实例
-        this._routerRoot = this.$parent?._router;
+        this._routerRoot = this.$parent?._router || this.$parent._routerRoot;
       }
     },
   });
@@ -27,7 +27,7 @@ export function install(_Vue) {
   });
   Object.defineProperty(Vue.prototype, "$route", {
     get() {
-      return this._routerRoot && this._routerRoot._route;
+      return this._routerRoot._route || this._routerRoot.history.current;
     },
   });
   // 内部修改的是current
