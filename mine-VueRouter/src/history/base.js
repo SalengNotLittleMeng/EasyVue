@@ -11,7 +11,16 @@ function createRoute(record, location) {
     matched,
   };
 }
-
+function runQueue(queue, from, to, cb) {
+  function next(index) {
+    if (index >= queue.length) {
+      return cb();
+    }
+    let hook = queue[index];
+    hook(from, to, () => next(index + 1));
+  }
+  next(0);
+}
 export default class Base {
   constructor(router) {
     this.router = router;
@@ -32,11 +41,15 @@ export default class Base {
     ) {
       return;
     }
-    this.current = route;
-    // path:'/',matched:[]
-    // 当路由切换的时候，也应该调用transitionTo拿到新的记录
-    listener && listener();
-    this.cb && this.cb(route);
+    let queue = [].concat(this.router.beforeEachHooks);
+    // 钩子执行完后再做跳转
+    runQueue(queue, this.current, route, () => {
+      this.current = route;
+      // path:'/',matched:[]
+      // 当路由切换的时候，也应该调用transitionTo拿到新的记录
+      listener && listener();
+      this.cb && this.cb(route);
+    });
   }
   listen(cb) {
     // 用户自定义的钩子 this._route=route

@@ -223,7 +223,6 @@
       var parent = _ref.parent,
         data = _ref.data;
       data.routerView = true;
-      console.log(parent.$route);
       var route = parent.$route;
       var depth = 0; // 找到当前渲染的是第几层
 
@@ -365,6 +364,21 @@
     );
   }
 
+  function runQueue(queue, from, to, cb) {
+    function next(index) {
+      if (index >= queue.length) {
+        return cb();
+      }
+
+      var hook = queue[index];
+      hook(from, to, function () {
+        return next(index + 1);
+      });
+    }
+
+    next(0);
+  }
+
   var Base = /*#__PURE__*/ (function () {
     function Base(router) {
       _classCallCheck(this, Base);
@@ -380,6 +394,8 @@
       {
         key: "transitionTo",
         value: function transitionTo(location, listener) {
+          var _this = this;
+
           // 用之前的匹配方法
           var record = this.router.match(location);
           var route = createRoute(record, {
@@ -393,11 +409,15 @@
             return;
           }
 
-          this.current = route; // path:'/',matched:[]
-          // 当路由切换的时候，也应该调用transitionTo拿到新的记录
+          var queue = [].concat(this.router.beforeEachHooks); // 钩子执行完后再做跳转
 
-          listener && listener();
-          this.cb && this.cb(route);
+          runQueue(queue, this.current, route, function () {
+            _this.current = route; // path:'/',matched:[]
+            // 当路由切换的时候，也应该调用transitionTo拿到新的记录
+
+            listener && listener();
+            _this.cb && _this.cb(route);
+          });
         },
       },
       {
@@ -428,7 +448,7 @@
         key: "setupListener",
         value: function setupListener() {
           window.addEventListener("popstate", function () {
-            console.log(this.window.location.pathname);
+            this.transitionTo(getCurrentLocation());
           });
         },
       },
@@ -436,6 +456,14 @@
         key: "getCurrentLocation",
         value: function getCurrentLocation() {
           return window.location.pathname;
+        },
+      },
+      {
+        key: "push",
+        value: function push(location) {
+          this.transitionTo(location, function () {
+            window.history.pushState({}, "", location);
+          });
         },
       },
     ]);
@@ -490,6 +518,14 @@
           return getHash();
         },
       },
+      {
+        key: "push",
+        value: function push(location) {
+          this.transitionTo(location, function () {
+            window.location.hash = location;
+          });
+        },
+      },
     ]);
 
     return Hash;
@@ -499,7 +535,8 @@
     function VueRouter(options) {
       _classCallCheck(this, VueRouter);
 
-      this.install = install; // 对用户传入的路由表进行映射
+      this.install = install;
+      this.beforeEachHooks = []; // 对用户传入的路由表进行映射
 
       var routes = options.routes;
       this.matcher = createMatcher(routes); // 根据不用的模式创建不同的路由系统
@@ -515,6 +552,12 @@
 
     _createClass(VueRouter, [
       {
+        key: "beforeEach",
+        value: function beforeEach(cb) {
+          this.beforeEachHooks.push(cb);
+        },
+      },
+      {
         key: "match",
         value: function match(path) {
           return this.matcher.match(path);
@@ -523,9 +566,7 @@
       {
         key: "push",
         value: function push(location) {
-          this.history.transitionTo(location, function () {
-            window.location.hash = location;
-          });
+          return this.history.push(location);
         },
       },
       {

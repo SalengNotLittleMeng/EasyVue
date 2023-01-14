@@ -5,11 +5,16 @@ class History extends Base {
   }
   setupListener() {
     window.addEventListener("popstate", function () {
-      console.log(this.window.location.pathname);
+      this.transitionTo(getCurrentLocation());
     });
   }
   getCurrentLocation() {
     return window.location.pathname;
+  }
+  push(location) {
+    this.transitionTo(location, () => {
+      window.history.pushState({}, "", location);
+    });
   }
 }
 

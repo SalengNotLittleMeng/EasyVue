@@ -4,7 +4,6 @@ export default {
   functional: true,
   render(h, { parent, data }) {
     data.routerView = true;
-    console.log(parent.$route);
     let route = parent.$route;
     let depth = 0;
     // 找到当前渲染的是第几层

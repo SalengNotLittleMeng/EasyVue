@@ -5,6 +5,7 @@ import Hash from "./history/hash";
 class VueRouter {
   constructor(options) {
     this.install = install;
+    this.beforeEachHooks = [];
     // 对用户传入的路由表进行映射
     const routes = options.routes;
     this.matcher = createMatcher(routes);
@@ -16,13 +17,14 @@ class VueRouter {
       this.history = new History(this);
     }
   }
+  beforeEach(cb) {
+    this.beforeEachHooks.push(cb);
+  }
   match(path) {
     return this.matcher.match(path);
   }
   push(location) {
-    this.history.transitionTo(location, () => {
-      window.location.hash = location;
-    });
+    return this.history.push(location);
   }
   init(app) {
     let history = this.history;
