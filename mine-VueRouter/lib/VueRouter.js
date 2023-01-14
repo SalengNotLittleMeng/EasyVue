@@ -9,6 +9,45 @@
 })(this, function () {
   "use strict";
 
+  function ownKeys(object, enumerableOnly) {
+    var keys = Object.keys(object);
+
+    if (Object.getOwnPropertySymbols) {
+      var symbols = Object.getOwnPropertySymbols(object);
+      enumerableOnly &&
+        (symbols = symbols.filter(function (sym) {
+          return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+        })),
+        keys.push.apply(keys, symbols);
+    }
+
+    return keys;
+  }
+
+  function _objectSpread2(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = null != arguments[i] ? arguments[i] : {};
+      i % 2
+        ? ownKeys(Object(source), !0).forEach(function (key) {
+            _defineProperty(target, key, source[key]);
+          })
+        : Object.getOwnPropertyDescriptors
+        ? Object.defineProperties(
+            target,
+            Object.getOwnPropertyDescriptors(source)
+          )
+        : ownKeys(Object(source)).forEach(function (key) {
+            Object.defineProperty(
+              target,
+              key,
+              Object.getOwnPropertyDescriptor(source, key)
+            );
+          });
+    }
+
+    return target;
+  }
+
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
       throw new TypeError("Cannot call a class as a function");
@@ -32,6 +71,21 @@
       writable: false,
     });
     return Constructor;
+  }
+
+  function _defineProperty(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true,
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
   }
 
   function _inherits(subClass, superClass) {
@@ -139,6 +193,9 @@
           this._router = this.$options.router || {};
 
           this._router.init(this); //this就是我们整个的应用(new Vue)
+          // 给根实例添加一个属性_router,就是当前的current对象
+
+          Vue.util.defineReactive(this, "_route", this._router.history.current);
         } else {
           var _this$$parent;
 
@@ -153,9 +210,15 @@
 
     Object.defineProperty(Vue.prototype, "$router", {
       get: function get() {
-        return this._routerRoot;
+        return this._routerRoot && this._routerRoot._router;
       },
     });
+    Object.defineProperty(Vue.prototype, "$route", {
+      get: function get() {
+        return this._routerRoot && this._routerRoot._route;
+      },
+    }); // 内部修改的是current
+
     Vue.component("router-link", {
       props: {
         to: {
@@ -224,6 +287,7 @@
         component: route.component,
         props: route.props,
         meta: route.meta,
+        parent: parentRecord,
       };
     }
 
@@ -259,11 +323,34 @@
     };
   }
 
+  function createRoute(record, location) {
+    var matched = [];
+
+    if (record) {
+      while (record) {
+        matched.unshift(record);
+        record = record.parent;
+      }
+    }
+
+    return _objectSpread2(
+      _objectSpread2({}, location),
+      {},
+      {
+        matched: matched,
+      }
+    );
+  }
+
   var Base = /*#__PURE__*/ (function () {
     function Base(router) {
       _classCallCheck(this, Base);
 
-      this.router = router;
+      this.router = router; // 每次更新的是current，每次current变化，我们就可以切换页面
+
+      this.current = createRoute(null, {
+        path: "/",
+      });
     } // 所有跳转的逻辑都要放在transitionTo中来实现
 
     _createClass(Base, [
@@ -272,9 +359,29 @@
         value: function transitionTo(location, listener) {
           // 用之前的匹配方法
           var record = this.router.match(location);
-          console.log(record); // 当路由切换的时候，也应该调用transitionTo拿到新的记录
+          var route = createRoute(record, {
+            path: location,
+          }); // 这里需要取消点击进入和路由变化中的两次重复变化，注意path='/'时可能会匹配组件
+
+          if (
+            location == this.current.path &&
+            route.matched.length == this.current.matched.length
+          ) {
+            return;
+          }
+
+          this.current = route; // path:'/',matched:[]
+          // 当路由切换的时候，也应该调用transitionTo拿到新的记录
 
           listener && listener();
+          this.cb && this.cb(route);
+        },
+      },
+      {
+        key: "listen",
+        value: function listen(cb) {
+          // 用户自定义的钩子 this._route=route
+          this.cb = cb;
         },
       },
     ]);
@@ -346,8 +453,11 @@
       {
         key: "setupListener",
         value: function setupListener() {
+          var _this2 = this;
+
+          // 这里会监听哈希的变化，通过修改url或回退也会触发
           window.addEventListener("hashchange", function () {
-            console.log(getHash());
+            _this2.transitionTo(getHash());
           });
         },
       },
@@ -390,7 +500,9 @@
       {
         key: "push",
         value: function push(location) {
-          this.history.transitionTo(location);
+          this.history.transitionTo(location, function () {
+            window.location.hash = location;
+          });
         },
       },
       {
@@ -400,6 +512,10 @@
 
           history.transitionTo(history.getCurrentLocation(), function () {
             history.setupListener(); //监听路由变化
+          }); // 每次路由需要调用listen中的方法实现更新_route的值，使他能够发生变化，重新渲染视图
+
+          history.listen(function (newRoute) {
+            app._route = newRoute;
           });
         },
       },

@@ -17,6 +17,7 @@ function addRouteRecord(route, pathMap, parentRecord) {
       component: route.component,
       props: route.props,
       meta: route.meta,
+      parent: parentRecord,
     };
   }
   route.children &&

@@ -20,13 +20,19 @@ class VueRouter {
     return this.matcher.match(path);
   }
   push(location) {
-    this.history.transitionTo(location);
+    this.history.transitionTo(location, () => {
+      window.location.hash = location;
+    });
   }
   init(app) {
     let history = this.history;
     // 根据路径变化，匹配不同的组件进行渲染，路径变化，更新视图，路径需要是响应式的
     history.transitionTo(history.getCurrentLocation(), () => {
       history.setupListener(); //监听路由变化
+    });
+    // 每次路由需要调用listen中的方法实现更新_route的值，使他能够发生变化，重新渲染视图
+    history.listen((newRoute) => {
+      app._route = newRoute;
     });
   }
 }

@@ -17,8 +17,9 @@ class Hash extends Base {
   }
   // 之后需要调用此方法，监控hash值的变化
   setupListener() {
-    window.addEventListener("hashchange", function () {
-      console.log(getHash());
+    // 这里会监听哈希的变化，通过修改url或回退也会触发
+    window.addEventListener("hashchange", () => {
+      this.transitionTo(getHash());
     });
   }
   getCurrentLocation() {
