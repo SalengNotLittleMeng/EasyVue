@@ -1,3 +1,5 @@
+import routerLink from "./components/router-link";
+import routerView from "./components/router-view";
 export let Vue;
 export function install(_Vue) {
   Vue = _Vue;
@@ -29,35 +31,6 @@ export function install(_Vue) {
     },
   });
   // 内部修改的是current
-  Vue.component("router-link", {
-    name: "router-link",
-    props: {
-      to: { type: String },
-      tag: { type: String, default: "a" },
-    },
-    methods: {
-      handler() {
-        this.$router.push(this.to);
-      },
-    },
-    render(h) {
-      let tag = this.tag;
-      return h(
-        tag,
-        {
-          on: {
-            click: () => {
-              this.handler();
-            },
-          },
-        },
-        [this.$slots.default]
-      );
-    },
-  });
-  Vue.component("router-view", {
-    render(h) {
-      return h("a", { class: "foo" }, ["hello"]);
-    },
-  });
+  Vue.component("router-link", routerLink);
+  Vue.component("router-view", routerView);
 }
